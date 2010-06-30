@@ -1,0 +1,1 @@
+A simple builder to call Proguard with the proguard.config file in the root directory of a project.
