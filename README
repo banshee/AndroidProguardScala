@@ -28,6 +28,13 @@ USE
   then calls proguard.  Proguard gets everything it needs from the proguard.config file.  The builder
   gives it zero extra information.
 
+DIAGNOSING PROBLEMS
+
+* Build from the command line.  There shouldn't be any significant difference between how the builder
+  uses proguard and what you do from the command line.
+
+  The builder definitely needs improvement here.
+
 SILLY BUILDER TRICKS
 
 * There's no simple way that I saw to get progress information from proguard, so I just replace STDOUT and
