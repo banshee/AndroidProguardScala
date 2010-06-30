@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+   <extension
+         id="androidProguardScala"
+         name="Android Proguard Scala Builder"
+         point="org.eclipse.core.resources.builders">
+      <builder
+            hasNature="true">
+         <run
+               class="com.banshee.androidproguardscala.AndroidProguardScalaBuilder">
+         </run>
+      </builder>
+   </extension>
+   <extension
+         id="androidProguardScalaNatureId"
+         name="Android Proguard Scala Nature"
+         point="org.eclipse.core.resources.natures">
+      <runtime>
+         <run
+               class="com.banshee.androidproguardscala.AndroidProguardScalaNature">
+         </run>
+      </runtime>
+      <builder
+            id="AndroidProguardScala.androidProguardScala">
+      </builder>
+   </extension>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="true"
+            objectClass="org.eclipse.core.resources.IProject"
+            nameFilter="*"
+            id="AndroidProguardScala.contribution1">
+         <action
+               label="Add/Remove AndroidProguardScala Nature"
+               class="com.banshee.androidproguardscala.ToggleNatureAction"
+               menubarPath="additions"
+               enablesFor="+"
+               id="AndroidProguardScala.addRemoveNatureAction">
+         </action>
+      </objectContribution>
+   </extension>
+   <extension
+         id="xmlProblem"
+         name="XML Problem"
+         point="org.eclipse.core.resources.markers">
+      <super
+            type="org.eclipse.core.resources.problemmarker">
+      </super>
+      <persistent
+            value="true">
+      </persistent>
+   </extension>
+
+</plugin>
