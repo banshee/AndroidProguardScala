@@ -1,1 +1,36 @@
-A simple builder to call Proguard with the proguard.config file in the root directory of a project.
+USE
+
+* Create a proguard.config file containing all the options you want to pass to proguard.
+* Confirm that the file works by using it from the command line:
+
+  java -jar lib/proguard.jar @proguard.config
+
+* Add the AndroidProguardScala builder to the dropins directory of your eclipse installation.
+
+* Restart Eclipse and add the AndroidProguardScala nature to the desired project.
+
+* I use seperate projects, one for my Scala code, and one project that just contains this builder.
+  The project that just contains the builder depends on the projects that contain the Scala code.  When 
+  anything in those projects changes, the builder is invoked and starts Proguard.
+
+  Once the build is finished, the builder refreshes its own project.  Presumably proguard will write to files
+  in that project, and the refresh will allow Eclipse to pick up those changes.
+
+  Notice that the builder is almost entirely ignorant.  It sees that things it depends on have changed.  It
+  then calls proguard.  Proguard gets everything it needs from the proguard.config file.  The builder
+  gives it zero extra information.
+
+SILLY BUILDER TRICKS
+
+* There's no simple way that I saw to get progress information from proguard, so I just replace STDOUT and
+  report the number of bytes written.  It's a hack, but seems to be working well enough.  Patches 
+  welcome :-).
+
+WHY NOT JUST SHELL OUT?
+
+* I couldn't figure out how to get Eclipse to recognize that proguard had created new files, so I'd keep
+  making changes that didn't get to the final product.
+
+* It feels faster.  It's not starting up a new jvm every time, for one.
+
+* It can be interupted.  The shell locks things up for quite a bit of time.
