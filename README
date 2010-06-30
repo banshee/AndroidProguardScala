@@ -1,3 +1,11 @@
+BUILDING
+
+* Get a copy of the Eclipse PDE - Plugin Development Environment version.
+
+  As of 29 June 2010, that's found at:
+
+    http://www.eclipse.org/downloads/index_project.php
+
 USE
 
 * Create a proguard.config file containing all the options you want to pass to proguard.
