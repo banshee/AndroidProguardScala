@@ -2,6 +2,8 @@ package com.banshee.androidproguardscala;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -10,12 +12,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 
 import proguard.ClassPath;
 import proguard.ClassPathEntry;
@@ -36,11 +41,23 @@ public class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
 
   public Configuration proguardConfiguration(IPath proguardConfigFile)
       throws IOException,
-      ParseException {
-    ConfigurationParser parser = new ConfigurationParser(proguardConfigFile.toFile());
-    Configuration proguardConfiguration = new Configuration();
-    parser.parse(proguardConfiguration);
-    return proguardConfiguration;
+      ParseException,
+      CoreException {
+    if (proguardConfigFile.toFile().exists()) {
+      ConfigurationParser parser = new ConfigurationParser(proguardConfigFile.toFile());
+      Configuration proguardConfiguration = new Configuration();
+      parser.parse(proguardConfiguration);
+      return proguardConfiguration;
+    } else {
+      final String msg = "FATAL: You must have a ProGuard config file at "
+          + proguardConfigFile.toOSString();
+      // IMarker m = ResourcesPlugin.getWorkspace()
+      // .getRoot()
+      // .createMarker(IMarker.PROBLEM);
+      // m.setAttribute(IMarker.MESSAGE, msg);
+      final Status status = new Status(IStatus.ERROR, BUILDER_ID, msg);
+      throw new CoreException(status);
+    }
   }
 
   private String computeProguardSignature() {
@@ -49,7 +66,8 @@ public class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
 
   private ProguardTask createProguardBuildTask(String signature)
       throws IOException,
-      ParseException {
+      ParseException,
+      CoreException {
     IPath proguardConfigFile = proguardConfigFile();
     final Configuration proConfig = proguardConfiguration(proguardConfigFile);
     final File tempOutputFile = File.createTempFile("proguard_temp_file",
@@ -174,7 +192,7 @@ public class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   }
 
   public static final String BUILDER_ID = "AndroidProguardScala.androidProguardScala";
-
+  private final List<IMarker> markers = new ArrayList<IMarker>();
   private final ExecutorService executorService = MoreExecutors.getExitingExecutorService((ThreadPoolExecutor) Executors.newFixedThreadPool(4));
   private final ListeningExecutorService listeningExecutorService = MoreExecutors.listeningDecorator(executorService);
   final AtomicReference<ProguardTask> runningProguardTask = ProguardTask.emptyAtomicReferenceToTask();
