@@ -5,5 +5,6 @@
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="lib" path="lib/proguard.jar" sourcepath="/Users/james/lib/proguard4.7beta1/src"/>
+	<classpathentry kind="lib" path="lib/guava-10.0.jar" sourcepath="/Users/james/lib/guava-10.0-sources.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
