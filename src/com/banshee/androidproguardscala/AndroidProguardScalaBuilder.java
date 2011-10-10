@@ -192,8 +192,8 @@ public class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   }
 
   public static final String BUILDER_ID = "AndroidProguardScala.androidProguardScala";
-  private final List<IMarker> markers = new ArrayList<IMarker>();
   private final ExecutorService executorService = MoreExecutors.getExitingExecutorService((ThreadPoolExecutor) Executors.newFixedThreadPool(4));
   private final ListeningExecutorService listeningExecutorService = MoreExecutors.listeningDecorator(executorService);
+  private final List<IMarker> markers = new ArrayList<IMarker>();
   final AtomicReference<ProguardTask> runningProguardTask = ProguardTask.emptyAtomicReferenceToTask();
 }
