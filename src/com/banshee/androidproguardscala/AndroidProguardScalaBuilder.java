@@ -29,15 +29,96 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
 public class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
-  ExecutorService tpool = MoreExecutors.getExitingExecutorService((ThreadPoolExecutor) Executors.newFixedThreadPool(4));
-  ListeningExecutorService futuresService = MoreExecutors.listeningDecorator(tpool);
-
   public IPath proguardConfigFile() {
     IPath q = this.getProject().getLocation().append("proguard.config");
     return q;
   }
 
-  final AtomicReference<ProguardTask> runningProguardTask = ProguardTask.emptyAtomicReferenceToTask();
+  public Configuration proguardConfiguration(IPath proguardConfigFile)
+      throws IOException,
+      ParseException {
+    ConfigurationParser parser = new ConfigurationParser(proguardConfigFile.toFile());
+    Configuration proguardConfiguration = new Configuration();
+    parser.parse(proguardConfiguration);
+    return proguardConfiguration;
+  }
+
+  private String computeProguardSignature() {
+    return "";
+  }
+
+  private ProguardTask createProguardBuildTask(String signature)
+      throws IOException,
+      ParseException {
+    IPath proguardConfigFile = proguardConfigFile();
+    final Configuration proConfig = proguardConfiguration(proguardConfigFile);
+    final File tempOutputFile = File.createTempFile("proguard_temp_file",
+        ".proguard");
+    tempOutputFile.deleteOnExit();
+    replaceTmpProguardOutput(proConfig, tempOutputFile);
+    final ListenableFuture<File> proguardFuture = listeningExecutorService.submit(new Callable<File>() {
+      @Override
+      public File call() throws Exception {
+        File result = executeProguard(proConfig, tempOutputFile);
+        return result;
+      }
+    });
+    return new ProguardTask(signature,
+        proguardFuture,
+        tempOutputFile,
+        destinationFile());
+  }
+
+  private File destinationFile() {
+    return new File("/tmp/progOut");
+  }
+
+  private
+      void
+      moveProguardOutputToFinalDestination(File file, File destination) {
+    // TODO Auto-generated method stub
+
+  }
+
+  /**
+   * @param proConfig
+   * @param tempOutputFile
+   * @return The id of the output file in proConfig.programJars, or -1 if no
+   *         filename includes TMP.
+   */
+  private int replaceTmpProguardOutput(
+      Configuration proConfig,
+      File tempOutputFile) {
+    final ClassPath jars = proConfig.programJars;
+    int outputId = -1;
+    for (int index = 0; index < jars.size(); index++) {
+      final ClassPathEntry jar = jars.get(index);
+      if (jar.isOutput()) {
+        jar.setFile(tempOutputFile);
+        outputId = index;
+        break;
+      }
+    }
+    return outputId;
+  }
+
+  private void watchFuture(ProguardTask task, IProgressMonitor monitor)
+      throws InterruptedException,
+      ExecutionException {
+    ListenableFuture<File> f = task.getBuildTask();
+    monitor.beginTask(BUILDER_ID, 100);
+    while (!isInterrupted() && !monitor.isCanceled()) {
+      if (f.isDone()) {
+        moveProguardOutputToFinalDestination(f.get(), task.getDestinationFile());
+        return;
+      }
+      monitor.worked(1);
+      Thread.sleep(500);
+    }
+    if (isInterrupted() || monitor.isCanceled()) {
+      System.out.println("got cancel");
+    }
+  }
 
   @Override
   protected IProject[] build(int kind, Map args, IProgressMonitor monitor)
@@ -82,61 +163,6 @@ public class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
     return null;
   }
 
-  private ProguardTask createProguardBuildTask(String signature)
-      throws IOException,
-      ParseException {
-    IPath proguardConfigFile = proguardConfigFile();
-    final Configuration proConfig = proguardConfiguration(proguardConfigFile);
-    final File tempOutputFile = File.createTempFile("proguard_temp_file",
-        ".proguard");
-    tempOutputFile.deleteOnExit();
-    replaceTmpProguardOutput(proConfig, tempOutputFile);
-    final ListenableFuture<File> proguardFuture = futuresService.submit(new Callable<File>() {
-      @Override
-      public File call() throws Exception {
-        File result = executeProguard(proConfig, tempOutputFile);
-        return result;
-      }
-    });
-    return new ProguardTask(signature,
-        proguardFuture,
-        tempOutputFile,
-        destinationFile());
-  }
-
-  private File destinationFile() {
-    return new File("/tmp/progOut");
-  }
-
-  private String computeProguardSignature() {
-    return "";
-  }
-
-  private void watchFuture(ProguardTask task, IProgressMonitor monitor)
-      throws InterruptedException,
-      ExecutionException {
-    ListenableFuture<File> f = task.getBuildTask();
-    monitor.beginTask(BUILDER_ID, 100);
-    while (!isInterrupted() && !monitor.isCanceled()) {
-      if (f.isDone()) {
-        moveProguardOutputToFinalDestination(f.get(), task.getDestinationFile());
-        return;
-      }
-      monitor.worked(1);
-      Thread.sleep(500);
-    }
-    if (isInterrupted() || monitor.isCanceled()) {
-      System.out.println("got cancel");
-    }
-  }
-
-  private
-      void
-      moveProguardOutputToFinalDestination(File file, File destination) {
-    // TODO Auto-generated method stub
-
-  }
-
   protected File executeProguard(Configuration proConfig, File tempOutputFile) {
     try {
       new ProGuard(proConfig).execute();
@@ -147,36 +173,9 @@ public class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
     return tempOutputFile;
   }
 
-  /**
-   * @param proConfig
-   * @param tempOutputFile
-   * @return The id of the output file in proConfig.programJars, or -1 if no
-   *         filename includes TMP.
-   */
-  private int replaceTmpProguardOutput(
-      Configuration proConfig,
-      File tempOutputFile) {
-    final ClassPath jars = proConfig.programJars;
-    int outputId = -1;
-    for (int index = 0; index < jars.size(); index++) {
-      final ClassPathEntry jar = jars.get(index);
-      if (jar.isOutput()) {
-        jar.setFile(tempOutputFile);
-        outputId = index;
-        break;
-      }
-    }
-    return outputId;
-  }
-
-  public Configuration proguardConfiguration(IPath proguardConfigFile)
-      throws IOException,
-      ParseException {
-    ConfigurationParser parser = new ConfigurationParser(proguardConfigFile.toFile());
-    Configuration proguardConfiguration = new Configuration();
-    parser.parse(proguardConfiguration);
-    return proguardConfiguration;
-  }
-
   public static final String BUILDER_ID = "AndroidProguardScala.androidProguardScala";
+
+  private final ExecutorService executorService = MoreExecutors.getExitingExecutorService((ThreadPoolExecutor) Executors.newFixedThreadPool(4));
+  private final ListeningExecutorService listeningExecutorService = MoreExecutors.listeningDecorator(executorService);
+  final AtomicReference<ProguardTask> runningProguardTask = ProguardTask.emptyAtomicReferenceToTask();
 }
