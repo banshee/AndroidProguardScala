@@ -35,7 +35,10 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 public class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   public IPath proguardConfigFile() {
-    IPath q = this.getProject().getLocation().append("proguard.config");
+    // TODO This should be user-configurable
+    IPath q = this.getProject()
+        .getLocation()
+        .append("proguard_android_scala.config");
     return q;
   }
 
@@ -88,14 +91,14 @@ public class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   }
 
   private File destinationFile() {
+    // TODO This has to read from the config file
     return new File("/tmp/progOut");
   }
 
   private
       void
       moveProguardOutputToFinalDestination(File file, File destination) {
-    // TODO Auto-generated method stub
-
+    // TODO This has to work or nothing matters
   }
 
   /**
