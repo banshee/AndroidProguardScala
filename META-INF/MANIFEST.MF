@@ -38,4 +38,5 @@ Export-Package: com.banshee.androidproguardscala,
  proguard.util,
  proguard.wtk
 Bundle-ClassPath: lib/proguard.jar,
+ lib/guava-10.0.jar,
  .
