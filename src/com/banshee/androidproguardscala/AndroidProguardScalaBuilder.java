@@ -144,6 +144,7 @@ public class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   @Override
   protected IProject[] build(int kind, Map args, IProgressMonitor monitor)
       throws CoreException {
+    Exception exception = null;
     try {
       String proguardSignature = computeProguardSignature();
       final ProguardTask task = runningProguardTask.get();
@@ -168,18 +169,22 @@ public class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
         watchFuture(newTask, monitor);
       }
     } catch (IOException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      exception = e;
     } catch (ParseException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      exception = e;
     } catch (InterruptedException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      exception = e;
     } catch (ExecutionException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      exception = e;
     }
+    if (exception != null) {
+      final Status status = new Status(IStatus.ERROR,
+          BUILDER_ID,
+          exception.getLocalizedMessage(),
+          exception);
+      throw new CoreException(status);
+    }
+    // TODO only refresh the output jar
     getProject().refreshLocal(IResource.DEPTH_INFINITE, null);
     return null;
   }
