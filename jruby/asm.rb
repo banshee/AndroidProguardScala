@@ -28,7 +28,7 @@ args.flatten.each do |arg|
     klass = new_klass
   else
     Dir.glob arg do |d|
-      builder = RubyInterfaceImplementationBuilder.new klass
+      builder = JarAndClassFileVisitor.new klass
       case d
       when /\.class$/
         result = builder.build_for_filename d

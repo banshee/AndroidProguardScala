@@ -1,6 +1,8 @@
 require 'rubygems'
 require 'pathname'
 require 'asm_support'
+require 'asm_support/jar_and_class_file_visitor'
+require 'asm_support/dependency_signature_visitor'
 require 'required_classes'
 require 'runnable_callable'
 
@@ -16,7 +18,7 @@ class DependencyCalculator
 
       current_file = ""
 
-      builder = RubyInterfaceImplementationBuilder.new DependencySignatureVisitor
+      builder = JarAndClassFileVisitor.new DependencySignatureVisitor
       files.each do |classfile|
         current_file = classfile
         case classfile

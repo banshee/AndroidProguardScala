@@ -3,7 +3,7 @@ require 'asm.jar'
 require 'pp'
 
 module AsmSupport
-  class RubyInterfaceImplementationBuilder
+  class JarAndClassFileVisitor
     def initialize visitor_class
       @visitor_class = visitor_class
     end

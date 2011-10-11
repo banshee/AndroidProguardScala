@@ -49,7 +49,7 @@ class FilterCallback
       file = selection_to_path selection
       
 
-      builder = RubyInterfaceImplementationBuilder.new InterfaceVisitor
+      builder = JarAndClassFileVisitor.new InterfaceVisitor
 
       builder.build_for_filename file
     rescue Exception => e
