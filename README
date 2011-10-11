@@ -6,6 +6,14 @@ BUILDING
 
     http://www.eclipse.org/downloads/index_project.php
 
+  Put a copy of the proguard and guava libraries into lib:
+
+    ProGuard is at (as of 10 Oct 2011):
+    http://sourceforge.net/projects/proguard/files/proguard/4.6/proguard4.6.tar.gz/download
+
+    Guava is at:
+    http://repo2.maven.org/maven2/com/google/guava/guava/10.0.1/guava-10.0.1.jar
+
 USE
 
 * Create a proguard.config file containing all the options you want to pass to proguard.
