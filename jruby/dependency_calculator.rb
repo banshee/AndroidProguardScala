@@ -3,7 +3,6 @@ require 'pathname'
 require 'asm_support'
 require 'required_classes'
 require 'runnable_callable'
-require 'pp'
 
 include AsmSupport
 
@@ -45,7 +44,7 @@ class DependencyCalculator
       end
       result
     rescue Exception => e
-      pp "Exception ----------x", e, current_file, "foo"
+      puts "Exception ----------x", e, current_file, "foo"
     ensure
       poolrunner.shutdownNow rescue nil
     end
