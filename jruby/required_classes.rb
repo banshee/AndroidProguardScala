@@ -1,6 +1,4 @@
-require 'rubygems'
 require 'pathname'
-require 'rake'
 require 'asm_support'
 require 'pp'
 

@@ -1,4 +1,3 @@
-require 'rubygems'
 require 'pathname'
 require 'asm_support'
 require 'required_classes'
@@ -33,6 +32,11 @@ class DependencyTracker
   def calculate_class_file_paths starting_points_hash
     classes = calculate_classes starting_points_hash
     classes.map {|c| RequiredClasses.class_to_relative_filename c}.sort
+  end
+  
+  def combined_dependencies
+    value_hashes = @dependencies.values
+    value_hashes.map {|h| h.keys}.flatten.sort.uniq
   end
 
   def to_json

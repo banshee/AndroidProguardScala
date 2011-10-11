@@ -1,11 +1,14 @@
-require 'rubygems'
-require 'pathname'
-require 'asm_support'
-require 'required_classes'
-require 'runnable_callable'
-require 'dependency_tracker'
-require 'can_opener'
+require 'dependency_signature'
+require 'pp'
 
-tracker = DependencyTracker.new
-tracker.populate ARGV
-puts tracker.to_json
+signature = DependencySignature.new
+
+def glob_list files
+  files.map do |f|
+    Dir.glob f
+  end.flatten
+end
+
+files = glob_list ARGV
+signature.add_files files
+pp signature.signature

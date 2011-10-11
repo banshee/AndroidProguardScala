@@ -26,6 +26,7 @@ module AsmSupport
     end
 
     def build_for_filename filename
+      pp 'in build for filename'
       inputstream = name_to_inputstream filename
       build_for_inputstream inputstream
     end

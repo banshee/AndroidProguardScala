@@ -51,7 +51,7 @@ module AsmSupport
           a
         end
       end
-      @result[@current_class][([method_name] + tags).join("*")] = 1
+      @result[@current_class][([method_name] + tags).join("-")] = 1
       self
     end
   end

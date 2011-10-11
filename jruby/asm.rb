@@ -2,7 +2,6 @@ require 'rubygems'
 require 'asm_support'
 require 'asm_support/printer_visitor'
 require 'asm_support/interface_visitor'
-require 'rake'
 require 'pp'
 
 include AsmSupport

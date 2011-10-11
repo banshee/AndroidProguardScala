@@ -15,6 +15,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IResourceDelta;
+import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -29,12 +31,18 @@ import proguard.ConfigurationParser;
 import proguard.ParseException;
 import proguard.ProGuard;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
+import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
 public class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
+  DependencySignature jrubyDependencySignature = new DependencySignature();
+  String deleteme = computeProguardSignature(null);
+
   public IPath proguardConfigFile() {
     // TODO This should be user-configurable
     IPath q = this.getProject()
@@ -64,9 +72,12 @@ public class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
     }
   }
 
-  private String computeProguardSignature() {
+  private String computeProguardSignature(List<IPath> changedPaths) {
     // TODO use the JRuby signature here so we don't run proguard on every build
-    return "";
+    ImmutableList<String> cp = ImmutableList.of("/Users/james/runtime-EclipseApplication/Deleteme/bin/com/restphone/Stack.class");
+    String result = new DependencySignature().add_files(cp);
+    System.out.println("resultfromdep is" + result);
+    return result;
   }
 
   private ProguardTask createProguardBuildTask(String signature)
@@ -148,8 +159,22 @@ public class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   protected IProject[] build(int kind, Map args, IProgressMonitor monitor)
       throws CoreException {
     Exception exception = null;
+
+    String proguardSignature = computeProguardSignature(ImmutableList.<IPath> of());
+
+    if (kind == IncrementalProjectBuilder.FULL_BUILD) {
+      fullBuild(monitor);
+    } else {
+      IResourceDelta delta = getDelta(getProject());
+      if (delta == null) {
+        fullBuild(monitor);
+      } else {
+        ImmutableList<IPath> changedPaths = incrementalBuild(delta, monitor);
+        proguardSignature = computeProguardSignature(changedPaths);
+      }
+    }
+
     try {
-      String proguardSignature = computeProguardSignature();
       final ProguardTask task = runningProguardTask.get();
       if (task.signatureMatches(proguardSignature)) {
         watchFuture(task, monitor);
@@ -200,6 +225,33 @@ public class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
       return null;
     }
     return tempOutputFile;
+  }
+
+  private ImmutableList<IPath> incrementalBuild(
+      IResourceDelta delta,
+      IProgressMonitor monitor) {
+    final Builder<IPath> result = ImmutableList.<IPath> builder();
+    try {
+      delta.accept(new IResourceDeltaVisitor() {
+        @Override
+        public boolean visit(IResourceDelta delta) {
+          final IResource resource = delta.getResource();
+          if (resource.getType() == IResource.FILE) {
+            final IPath rawLocation = resource.getRawLocation();
+            System.out.println("changed raw location:" + rawLocation);
+            result.add(rawLocation);
+          }
+          return true; // visit children too
+        }
+      });
+    } catch (CoreException e) {
+      e.printStackTrace();
+    }
+    return result.build();
+  }
+
+  private void fullBuild(IProgressMonitor monitor) {
+    System.out.println("full build");
   }
 
   public static final String BUILDER_ID = "AndroidProguardScala.androidProguardScala";
