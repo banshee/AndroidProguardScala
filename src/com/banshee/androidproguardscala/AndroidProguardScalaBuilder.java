@@ -29,6 +29,7 @@ import proguard.ConfigurationParser;
 import proguard.ParseException;
 import proguard.ProGuard;
 
+import com.google.common.io.Files;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -64,6 +65,7 @@ public class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   }
 
   private String computeProguardSignature() {
+    // TODO use the JRuby signature here so we don't run proguard on every build
     return "";
   }
 
@@ -74,9 +76,9 @@ public class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
     IPath proguardConfigFile = proguardConfigFile();
     final Configuration proConfig = proguardConfiguration(proguardConfigFile);
     final File tempOutputFile = File.createTempFile("proguard_temp_file",
-        ".proguard");
+        ".jar");
     tempOutputFile.deleteOnExit();
-    replaceTmpProguardOutput(proConfig, tempOutputFile);
+    String originalName = replaceTmpProguardOutput(proConfig, tempOutputFile);
     final ListenableFuture<File> proguardFuture = listeningExecutorService.submit(new Callable<File>() {
       @Override
       public File call() throws Exception {
@@ -87,45 +89,46 @@ public class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
     return new ProguardTask(signature,
         proguardFuture,
         tempOutputFile,
-        destinationFile());
+        destinationFile(originalName));
   }
 
-  private File destinationFile() {
-    // TODO This has to read from the config file
-    return new File("/tmp/progOut");
+  private File destinationFile(String originalName) {
+    return new File(originalName.replace(".TMP", ""));
   }
 
   private
       void
-      moveProguardOutputToFinalDestination(File file, File destination) {
-    // TODO This has to work or nothing matters
+      moveProguardOutputToFinalDestination(File file, File destination)
+          throws IOException {
+    Files.move(file, destination);
   }
 
   /**
    * @param proConfig
    * @param tempOutputFile
-   * @return The id of the output file in proConfig.programJars, or -1 if no
+   * @return The name of the output file in proConfig.programJars, or null if no
    *         filename includes TMP.
    */
-  private int replaceTmpProguardOutput(
+  private String replaceTmpProguardOutput(
       Configuration proConfig,
       File tempOutputFile) {
     final ClassPath jars = proConfig.programJars;
-    int outputId = -1;
+    String result = null;
     for (int index = 0; index < jars.size(); index++) {
       final ClassPathEntry jar = jars.get(index);
       if (jar.isOutput()) {
+        result = jar.getName();
         jar.setFile(tempOutputFile);
-        outputId = index;
         break;
       }
     }
-    return outputId;
+    return result;
   }
 
   private void watchFuture(ProguardTask task, IProgressMonitor monitor)
       throws InterruptedException,
-      ExecutionException {
+      ExecutionException,
+      IOException {
     ListenableFuture<File> f = task.getBuildTask();
     monitor.beginTask(BUILDER_ID, 100);
     while (!isInterrupted() && !monitor.isCanceled()) {
