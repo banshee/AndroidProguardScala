@@ -1,5 +1,5 @@
 require 'java'
-require 'asm.jar'
+require 'proguard_cache_requires'
 require 'pp'
 
 module AsmSupport

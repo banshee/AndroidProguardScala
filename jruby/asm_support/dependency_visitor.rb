@@ -1,6 +1,7 @@
 require 'java'
-require 'asm.jar'
+require 'asm-all-3.3.1.jar'
 require 'pp'
+require 'asm_support'
 
 module AsmSupport
   class DependencyVisitor < GenericVisitor

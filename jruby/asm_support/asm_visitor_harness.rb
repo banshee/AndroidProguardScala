@@ -1,9 +1,9 @@
 require 'java'
-require 'asm.jar'
+require 'proguard_cache_requires'
 require 'pp'
 
 module AsmSupport
-  class JarAndClassFileVisitor
+  class AsmVisitorHarness
     def initialize visitor_class
       @visitor_class = visitor_class
     end
@@ -26,7 +26,6 @@ module AsmSupport
     end
 
     def build_for_filename filename
-      pp 'in build for filename'
       inputstream = name_to_inputstream filename
       build_for_inputstream inputstream
     end
@@ -40,6 +39,11 @@ module AsmSupport
       visitor = @visitor_class.new
       build visitor, inputstream
       visitor.get_result
+    end
+    
+    def self.build_for_filename klass, filename
+      o = AsmVisitorHarness.new klass
+      o.build_for_filename filename
     end
   end
 end
