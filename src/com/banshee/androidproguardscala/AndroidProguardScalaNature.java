@@ -18,7 +18,7 @@ public class AndroidProguardScalaNature implements IProjectNature {
 
     for (int i = 0; i < commands.length; ++i) {
       if (commands[i].getBuilderName()
-          .equals(AndroidProguardScalaBuilder.BUILDER_ID)) {
+          .equals(AndroidProguardScalaBuilder.BUILDER_ID())) {
         return;
       }
     }
@@ -26,7 +26,7 @@ public class AndroidProguardScalaNature implements IProjectNature {
     ICommand[] newCommands = new ICommand[commands.length + 1];
     System.arraycopy(commands, 0, newCommands, 0, commands.length);
     ICommand command = desc.newCommand();
-    command.setBuilderName(AndroidProguardScalaBuilder.BUILDER_ID);
+    command.setBuilderName(AndroidProguardScalaBuilder.BUILDER_ID());
     newCommands[newCommands.length - 1] = command;
     desc.setBuildSpec(newCommands);
     project.setDescription(desc, null);
@@ -38,7 +38,7 @@ public class AndroidProguardScalaNature implements IProjectNature {
     ICommand[] commands = description.getBuildSpec();
     for (int i = 0; i < commands.length; ++i) {
       if (commands[i].getBuilderName()
-          .equals(AndroidProguardScalaBuilder.BUILDER_ID)) {
+          .equals(AndroidProguardScalaBuilder.BUILDER_ID())) {
         ICommand[] newCommands = new ICommand[commands.length - 1];
         System.arraycopy(commands, 0, newCommands, 0, i);
         System.arraycopy(commands, i + 1, newCommands, i, commands.length - i
