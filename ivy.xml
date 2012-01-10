@@ -28,9 +28,8 @@
       name="proguard-base"
       rev="4.6" />
     <dependency
-      org="org.jruby"
-      name="jruby-complete"
-      rev="1.6.5.1" />
-
+      org="com.google.guava"
+      name="guava"
+      rev="11.0" />
   </dependencies>
 </ivy-module>
