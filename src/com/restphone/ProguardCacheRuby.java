@@ -7,7 +7,6 @@ import org.jruby.runtime.builtin.IRubyObject;
 import org.jruby.javasupport.JavaUtil;
 import org.jruby.RubyClass;
 
-
 public class ProguardCacheRuby extends RubyObject  {
     private static final Ruby __ruby__ = Ruby.getGlobalRuntime();
     private static final RubyClass __metaclass__;
