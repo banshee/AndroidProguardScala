@@ -9,7 +9,7 @@
       <builder
             hasNature="true">
          <run
-               class="com.banshee.androidproguardscala.AndroidProguardScalaBuilder">
+               class="com.restphone.androidproguardscala.AndroidProguardScalaBuilder">
          </run>
       </builder>
    </extension>
@@ -19,7 +19,7 @@
          point="org.eclipse.core.resources.natures">
       <runtime>
          <run
-               class="com.banshee.androidproguardscala.AndroidProguardScalaNature">
+               class="com.restphone.androidproguardscala.AndroidProguardScalaNature">
          </run>
       </runtime>
       <builder
@@ -35,7 +35,7 @@
             id="AndroidProguardScala.contribution1">
          <action
                label="Add/Remove AndroidProguardScala Nature"
-               class="com.banshee.androidproguardscala.ToggleNatureAction"
+               class="com.restphone.androidproguardscala.ToggleNatureAction"
                menubarPath="additions"
                enablesFor="+"
                id="AndroidProguardScala.addRemoveNatureAction">
