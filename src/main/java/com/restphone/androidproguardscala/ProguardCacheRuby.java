@@ -1,4 +1,4 @@
-package com.restphone;
+package com.restphone.androidproguardscala;
 
 import org.jruby.Ruby;
 import org.jruby.RubyObject;
@@ -23,7 +23,7 @@ public class ProguardCacheRuby extends RubyObject  {
             "require 'pathname'\n" +
             "require 'fileutils'\n" +
             "\n" +
-            "java_package 'com.restphone'\n" +
+            "java_package 'com.restphone.androidproguardscala'\n" +
             "\n" +
             "class ProguardCacheRuby\n" +
             "  def proguard_output pattern, checksum\n" +

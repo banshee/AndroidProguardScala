@@ -1,4 +1,4 @@
-package com.banshee.androidproguardscala;
+package com.restphone.androidproguardscala;
 
 import java.util.Iterator;
 
@@ -11,6 +11,7 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
+
 
 // TODO Need to indicate whether or not the toggle is ON
 

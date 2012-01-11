@@ -1,4 +1,4 @@
-package com.banshee.androidproguardscala
+package com.restphone.androidproguardscala
 
 import com.restphone._
 import org.eclipse.core.resources.IncrementalProjectBuilder

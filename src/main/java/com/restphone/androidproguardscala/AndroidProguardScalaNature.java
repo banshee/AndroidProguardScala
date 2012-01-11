@@ -1,10 +1,13 @@
-package com.banshee.androidproguardscala;
+package com.restphone.androidproguardscala;
 
 import org.eclipse.core.resources.ICommand;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IProjectNature;
 import org.eclipse.core.runtime.CoreException;
+
+import com.banshee.androidproguardscala.AndroidProguardScalaBuilder;
+import com.banshee.androidproguardscala.
 
 public class AndroidProguardScalaNature implements IProjectNature {
   public static final String NATURE_ID = "AndroidProguardScala.androidProguardScalaNatureId";

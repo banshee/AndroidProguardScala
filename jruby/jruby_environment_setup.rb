@@ -3,7 +3,7 @@ require 'java'
 #$LOAD_PATH << "/Users/james/workspace/AndroidProguardScala/jruby"
 #$LOAD_PATH << "/Users/james/src/jruby/lib/ruby/1.8/"
 
-java_package 'com.restphone'
+java_package 'com.restphone.androidproguardscala'
 
 class JrubyEnvironmentSetup
   java_signature 'void addJrubyJarfile(String pathToJrubyCompleteJarfile)'

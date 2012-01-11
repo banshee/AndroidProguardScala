@@ -1,4 +1,4 @@
-package com.restphone;
+package com.restphone.androidproguardscala;
 
 import org.jruby.Ruby;
 import org.jruby.RubyObject;
@@ -17,7 +17,7 @@ public class JrubyEnvironmentSetup extends RubyObject  {
             "#$LOAD_PATH << \"/Users/james/workspace/AndroidProguardScala/jruby\"\n" +
             "#$LOAD_PATH << \"/Users/james/src/jruby/lib/ruby/1.8/\"\n" +
             "\n" +
-            "java_package 'com.restphone'\n" +
+            "java_package 'com.restphone.androidproguardscala'\n" +
             "\n" +
             "class JrubyEnvironmentSetup\n" +
             "  java_signature 'void addJrubyJarfile(String pathToJrubyCompleteJarfile)'\n" +
