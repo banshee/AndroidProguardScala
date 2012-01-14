@@ -7,6 +7,7 @@ import org.jruby.runtime.builtin.IRubyObject;
 import org.jruby.javasupport.JavaUtil;
 import org.jruby.RubyClass;
 
+
 public class ProguardCacheRuby extends RubyObject  {
     private static final Ruby __ruby__ = Ruby.getGlobalRuntime();
     private static final RubyClass __metaclass__;
@@ -140,7 +141,7 @@ public class ProguardCacheRuby extends RubyObject  {
             "  end\n" +
             "end\n" +
             "").toString();
-        __ruby__.executeScript(source, "jruby/proguard_cache.rb");
+        __ruby__.executeScript(source, "src/main/jruby/proguard_cache.rb");
         RubyClass metaclass = __ruby__.getClass("ProguardCacheRuby");
         metaclass.setRubyStaticAllocator(ProguardCacheRuby.class);
         if (metaclass == null) throw new NoClassDefFoundError("Could not load Ruby class: ProguardCacheRuby");

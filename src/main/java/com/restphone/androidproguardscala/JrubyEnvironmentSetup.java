@@ -7,6 +7,7 @@ import org.jruby.runtime.builtin.IRubyObject;
 import org.jruby.javasupport.JavaUtil;
 import org.jruby.RubyClass;
 
+
 public class JrubyEnvironmentSetup extends RubyObject  {
     private static final Ruby __ruby__ = Ruby.getGlobalRuntime();
     private static final RubyClass __metaclass__;
@@ -53,7 +54,7 @@ public class JrubyEnvironmentSetup extends RubyObject  {
             "    all_jars.each do |j|\n" +
             "      f = Pathname.new j\n" +
             "      case j\n" +
-            "      when /asm-all-3.3.1.jar/, /proguard-base-4.6.jar/\n" +
+            "      when /asm-3.3.1.jar/, /proguard-base-4.6.jar/\n" +
             "        $LOAD_PATH << f.parent\n" +
             "        puts \"new load path: \" + $LOAD_PATH.join(\",\")\n" +
             "      end\n" +
@@ -61,7 +62,7 @@ public class JrubyEnvironmentSetup extends RubyObject  {
             "  end\n" +
             "end\n" +
             "").toString();
-        __ruby__.executeScript(source, "jruby/jruby_environment_setup.rb");
+        __ruby__.executeScript(source, "src/main/jruby/jruby_environment_setup.rb");
         RubyClass metaclass = __ruby__.getClass("JrubyEnvironmentSetup");
         metaclass.setRubyStaticAllocator(JrubyEnvironmentSetup.class);
         if (metaclass == null) throw new NoClassDefFoundError("Could not load Ruby class: JrubyEnvironmentSetup");
