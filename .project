@@ -32,4 +32,11 @@
 		<nature>org.eclipse.jdt.core.javanature</nature>
 		<nature>org.eclipse.pde.api.tools.apiAnalysisNature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>.ivy2</name>
+			<type>2</type>
+			<location>/Users/james/.ivy2</location>
+		</link>
+	</linkedResources>
 </projectDescription>
