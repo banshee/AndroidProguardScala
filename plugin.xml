@@ -3,7 +3,7 @@
 <plugin
 >
    <extension
-         id="androidProguardScala"
+         id="Builder"
          name="Android Proguard Scala Builder"
          point="org.eclipse.core.resources.builders">
       <builder
@@ -14,7 +14,7 @@
       </builder>
    </extension>
    <extension
-         id="androidProguardScalaNatureId"
+         id="Nature"
          name="Android Proguard Scala Nature"
          point="org.eclipse.core.resources.natures">
       <runtime>
@@ -23,7 +23,7 @@
          </run>
       </runtime>
       <builder
-            id="AndroidProguardScala.androidProguardScala">
+            id="com.restphone.androidproguardscala.Builder">
       </builder>
    </extension>
    <extension
