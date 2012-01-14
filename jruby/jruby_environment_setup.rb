@@ -39,7 +39,7 @@ class JrubyEnvironmentSetup
     all_jars.each do |j|
       f = Pathname.new j
       case j
-      when /asm-all-3.3.1.jar/, /proguard-base-4.6.jar/
+      when /asm-3.3.1.jar/, /proguard-base-4.6.jar/
         $LOAD_PATH << f.parent
         puts "new load path: " + $LOAD_PATH.join(",")
       end

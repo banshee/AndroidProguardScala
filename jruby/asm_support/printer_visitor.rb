@@ -1,5 +1,4 @@
 require 'java'
-require 'asm-all-3.3.1.jar'
 
 module AsmSupport
   class PrinterVisitor < GenericVisitor
