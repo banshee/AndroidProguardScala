@@ -9,32 +9,32 @@ import org.eclipse.core.resources.ResourcesPlugin
 import scala.tools.eclipse.ScalaProject
 import org.eclipse.jdt.core.JavaCore
 import java.net.URI
-
-import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.CoreException
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.runtime.FileLocator
 import org.eclipse.core.runtime.Platform
-import org.osgi.framework.BundleContext;
-
+import org.osgi.framework.BundleContext
 import java.util.ResourceBundle
+import java.io.File
 
 class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   override def build(kind: Int, args: java.util.Map[String, String], monitor: IProgressMonitor): Array[IProject] = {
     val a = mapAsScalaMap(args)
+    val proguardConfFile = relativeToRoot("proguard.conf")
+    val outputJar = relativeToRoot("scala_compressed.jar")
+    val cacheDirectory = relativeToRoot("proguard_cache")
+    val cachedJar = relativeToRoot("proguard_cache/scala-library.CKSUM.jar")
+    rubyCacheController.build_dependency_files_and_final_jar(outputFoldersPathsAsStrings, proguardConfFile, outputJar, cacheDirectory, cachedJar)
+    Array.empty[IProject]
+  }
+
+  lazy val rubyCacheController = {
     JrubyEnvironmentSetup.addJrubyJarfile(pathForJarFile(classOf[org.jruby.Ruby]))
 
     loadClassIntoJRuby(classOf[org.objectweb.asm.Type])
     loadClassIntoJRuby(classOf[proguard.Initializer])
-    JrubyEnvironmentSetup.addToLoadPath(relativeToRoot("jruby"))
-    println("plugin ins asdf " + pluginDirectory)
-
-    val outputJar = relativeToRoot("scala_compressed.jar")
-    val cacheDirectory = relativeToRoot("proguard_cache")
-    val cachedJar = relativeToRoot("proguard_cache/scala-library.CKSUM.jar")
-    val proguardConfFile = relativeToRoot("proguard.conf")
-    val jr = new ProguardCacheRuby
-    jr.build_dependency_files_and_final_jar(outputFoldersPathsAsStrings, proguardConfFile, outputJar, cacheDirectory, cachedJar)
-    Array.empty[IProject]
+    JrubyEnvironmentSetup.addToLoadPath(pluginDirectory + "/jruby")
+    new ProguardCacheRuby
   }
 
   def relativeToRoot(path: String) = new java.io.File(rootDirectoryOfProject, path).toString
@@ -69,9 +69,12 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   def pluginDirectory = {
     val bundle = Platform.getBundle("com.restphone.androidproguardscala");
     println("bundle is " + bundle)
-    val path = new Path("jruby");
+    val path = new Path("/");
     val fileURL = FileLocator.find(bundle, path, null);
-    fileURL.toString
+    val f = FileLocator.toFileURL(fileURL)
+    val configFile = new File(fileURL.getPath())
+    println("fsefr: " + configFile + f.getFile)
+    f.getFile
   }
 }
 
