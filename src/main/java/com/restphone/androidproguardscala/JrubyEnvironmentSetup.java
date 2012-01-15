@@ -36,13 +36,26 @@ public class JrubyEnvironmentSetup extends RubyObject  {
             "      full_path = \"META-INF/jruby.home/lib/ruby/#{path}\"\n" +
             "      $LOAD_PATH << full_path unless $LOAD_PATH.include?(full_path)\n" +
             "    end\n" +
-            "    puts \"load path: \" + $LOAD_PATH.join(\"\\n,\\n\")\n" +
+            "    puts \"load path: \" + $LOAD_PATH.join(\"\\n\")\n" +
             "  end\n" +
             "\n" +
             "  java_signature 'void addToLoadPath(String file)'\n" +
             "\n" +
             "  def self.add_to_load_path file\n" +
+            "    require 'pathname'\n" +
             "    $LOAD_PATH << file\n" +
+            "    puts \"new load path: \" + $LOAD_PATH.join(\",\")\n" +
+            "  end\n" +
+            "\n" +
+            "  java_signature 'void addJarToLoadPathAndRequire(String jarfileFullPath)'\n" +
+            "\n" +
+            "  def self.add_jar_to_load_path_and_require jarfile\n" +
+            "    require 'pathname'\n" +
+            "    f = Pathname.new jarfile.to_s\n" +
+            "    $LOAD_PATH << f.parent\n" +
+            "    require f.basename\n" +
+            "    puts %Q{require \"#{f.parent}\"}\n" +
+            "    puts %Q{require \"#{f.basename}\"}\n" +
             "    puts \"new load path: \" + $LOAD_PATH.join(\",\")\n" +
             "  end\n" +
             "\n" +
@@ -116,6 +129,14 @@ public class JrubyEnvironmentSetup extends RubyObject  {
     public static void addToLoadPath(String file) {
         IRubyObject ruby_file = JavaUtil.convertJavaToRuby(__ruby__, file);
         IRubyObject ruby_result = RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __metaclass__, "add_to_load_path", ruby_file);
+        return;
+
+    }
+
+    
+    public static void addJarToLoadPathAndRequire(String jarfileFullPath) {
+        IRubyObject ruby_jarfileFullPath = JavaUtil.convertJavaToRuby(__ruby__, jarfileFullPath);
+        IRubyObject ruby_result = RuntimeHelpers.invoke(__ruby__.getCurrentContext(), __metaclass__, "add_jar_to_load_path_and_require", ruby_jarfileFullPath);
         return;
 
     }

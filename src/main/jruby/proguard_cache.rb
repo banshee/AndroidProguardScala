@@ -1,5 +1,4 @@
 require 'java'
-
 require 'proguard_cache_requires'
 require 'asm_support'
 require 'asm_support/asm_visitor_harness'
@@ -33,9 +32,6 @@ class ProguardCacheRuby
     d = Pathname.new dir
     result.map {|f| Pathname.new f}.map {|f| f.relative_path_from d}.map(&:to_s)
   end
-
-  #x = binary_file_directories_to_cache_files "/Users/james/.ivy2/cache/org.scala-tools.sbt"
-  #pp x
 
   def unique_lines_in_files_as_string files
     (unique_lines_in_files files).join("\n")
@@ -121,6 +117,17 @@ Example: jruby -S rake -T -v proguard[proguard_android_scala.config,proguard_cac
 
   #  ProguardCache.new.build_dependency_files_and_final_jar %w(target/scala-2.9.1), "proguard_config/proguard_android_scala.config.unix", "/tmp/out.jar", "target/proguard_cache"
   def build_dependency_files_and_final_jar input_directories, proguard_config_file, destination_jar, cache_dir, cache_jar_pattern
+    require 'pp'
+    input_directories.each do |i|
+      raise "non-existant input directory: " + i.to_s unless File.exists? i.to_s
+      puts "input directory: #{i}"
+    end
+    puts "Starting to build cached scala lib: " + {
+      :proguard_config_file => proguard_config_file,
+      :destination_jar => destination_jar,
+      :cache_dir => cache_dir,
+      :cache_jar_pattern => cache_jar_pattern
+    }.pretty_inspect
     result = build_proguard_dependencies input_directories, proguard_config_file, destination_jar, cache_dir, cache_jar_pattern
     run_proguard result
   end

@@ -21,13 +21,26 @@ class JrubyEnvironmentSetup
       full_path = "META-INF/jruby.home/lib/ruby/#{path}"
       $LOAD_PATH << full_path unless $LOAD_PATH.include?(full_path)
     end
-    puts "load path: " + $LOAD_PATH.join("\n,\n")
+    puts "load path: " + $LOAD_PATH.join("\n")
   end
 
   java_signature 'void addToLoadPath(String file)'
 
   def self.add_to_load_path file
+    require 'pathname'
     $LOAD_PATH << file
+    puts "new load path: " + $LOAD_PATH.join(",")
+  end
+
+  java_signature 'void addJarToLoadPathAndRequire(String jarfileFullPath)'
+
+  def self.add_jar_to_load_path_and_require jarfile
+    require 'pathname'
+    f = Pathname.new jarfile.to_s
+    $LOAD_PATH << f.parent
+    require f.basename
+    puts %Q{require "#{f.parent}"}
+    puts %Q{require "#{f.basename}"}
     puts "new load path: " + $LOAD_PATH.join(",")
   end
 
