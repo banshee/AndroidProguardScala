@@ -33,7 +33,7 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
 
     loadClassIntoJRuby(classOf[org.objectweb.asm.Type])
     loadClassIntoJRuby(classOf[proguard.Initializer])
-    JrubyEnvironmentSetup.addToLoadPath(pluginDirectory + "/jruby")
+    JrubyEnvironmentSetup.addToLoadPath(pluginDirectory + "src/main/jruby")
     new ProguardCacheRuby
   }
 
