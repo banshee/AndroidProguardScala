@@ -43,7 +43,7 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
 
   def outputFolders = scalaProject outputFolders
 
-  def outputFoldersPathsAsStrings = outputFolders map { _.toString } toArray
+  def outputFoldersPathsAsStrings = outputFolders map { _.toString } map {new java.io.File(rootDirectoryOfWorkspace, _).toString} toArray
 
   def rootDirectoryOfProject = {
     getProject.getLocation.toOSString
