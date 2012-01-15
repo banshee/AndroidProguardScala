@@ -68,12 +68,9 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
 
   def pluginDirectory = {
     val bundle = Platform.getBundle("com.restphone.androidproguardscala");
-    println("bundle is " + bundle)
     val path = new Path("/");
     val fileURL = FileLocator.find(bundle, path, null);
     val f = FileLocator.toFileURL(fileURL)
-    val configFile = new File(fileURL.getPath())
-    println("fsefr: " + configFile + f.getFile)
     f.getFile
   }
 }
