@@ -63,7 +63,7 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   }
 
   def loadJarIntoJRuby(path: String) = {
-    JrubyEnvironmentSetup.addToLoadPath(path)
+    JrubyEnvironmentSetup.addJarToLoadPathAndRequire(path)
   }
 
   def pluginDirectory = {
