@@ -1,10 +1,8 @@
 package com.restphone.androidproguardscala
 
 import java.io.File
-
 import scala.collection.JavaConversions.mapAsScalaMap
 import scala.collection.JavaConversions.seqAsJavaList
-
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.resources.ResourcesPlugin
@@ -15,59 +13,92 @@ import org.eclipse.core.runtime.Platform
 import org.jruby.Ruby
 import org.objectweb.asm.Type
 import org.osgi.framework.BundleContext
-
 import proguard.Initializer
+import org.eclipse.core.runtime.IPath
+import org.eclipse.jdt.internal.core.JavaProject
+import org.eclipse.jdt.core.JavaCore
 
 class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
-  import RichFile.toRichFile
+  import RichFile._
 
-  override def build(kind: Int, args: java.util.Map[_, _], monitor: IProgressMonitor): Array[IProject] = {
+  override def build(kind: Int, args: java.util.Map[String, String], monitor: IProgressMonitor): Array[IProject] = {
     val scalaArgs = mapAsScalaMap(args.asInstanceOf[java.util.Map[String, String]])
-    val cacheDirectory = relativeToRoot("proguard_cache")
-    val proguardConfFile = cacheDirectory / "proguard.conf"
+
+    val cacheDirectory = rootDirectoryOfProject / "proguard_cache"
+
+    val proguardDefaults = slurp(pathToFileRelativeToPluginBundle(new Path("proguard_cache/proguard_defaults.conf")))
     val proguardProcessedConfFile = cacheDirectory / "proguard_postprocessed.conf"
-    val outputJar = cacheDirectory / "scala_lib_after_proguard.jar"
+    val proguardAdditionsFile = cacheDirectory / "proguard_additions.conf"
+
     val cachedJar = cacheDirectory / "scala-library.CKSUM.jar"
-    val outputFolders = outputFoldersPaths map objToString
-    rubyCacheController.build_dependency_files_and_final_jar(outputFolders, proguardConfFile, proguardProcessedConfFile, outputJar, cacheDirectory, cachedJar)
+
+    val outputJar = rootDirectoryOfProject / "lib" / "scala_lib_after_proguard.jar"
+
+    val parameters = Map(
+      "cacheDir" -> cacheDirectory.getAbsolutePath,
+      "classFiles" -> (outputFoldersFiles map objToString toArray),
+      "proguardDefaults" -> proguardDefaults,
+      "proguardAdditionsFile" -> proguardAdditionsFile.getAbsolutePath,
+      "proguardProcessedConfFile" -> proguardProcessedConfFile.getAbsolutePath,
+      "cachedJar" -> cachedJar.getAbsolutePath,
+      "outputJar" -> outputJar.getAbsolutePath,
+      "scalaLibraryJar" -> pathToScalaLibraryJar)
+
+    println("-------------------------------------------")
+    println("params are " + parameters)
+
+    rubyCacheController.build_dependency_files_and_final_jar(parameters)
+
     Array.empty
   }
 
+  def pathToScalaLibraryJar = {
+    val lastSegmentIsScalaLibrary = (p: IPath) => p.lastSegment.equals("scala-library.jar")
+    val fileExists = (p: IPath) => p.toFile.exists
+
+    val p = JavaCore.create(getProject)
+    val paths = p.getResolvedClasspath(false) map { _.getPath }
+    val entry = paths filter lastSegmentIsScalaLibrary find fileExists
+    
+    entry.get
+  }
+
   lazy val rubyCacheController = {
-    JrubyEnvironmentSetup.addJrubyJarfile(pathForJarFile(classOf[org.jruby.Ruby]))
+    JrubyEnvironmentSetup.addJrubyJarfile(pathForJarFileContainingClass(classOf[org.jruby.Ruby]))
 
     loadClassIntoJRuby(classOf[org.objectweb.asm.Type])
     loadClassIntoJRuby(classOf[proguard.Initializer])
+    loadClassIntoJRuby(classOf[List[String]])
 
-    JrubyEnvironmentSetup.addToLoadPath(pluginDirectory + "src/main/jruby")
+    val jrubyLibDir = pluginDirectory / "src/main/jruby"
+    println("jrubylibdir is " + jrubyLibDir)
+    JrubyEnvironmentSetup.addToLoadPath(jrubyLibDir.toString)
 
     new ProguardCacheRuby
   }
 
-  def relativeToRoot(path: String) = new java.io.File(rootDirectoryOfProject, path)
+  def relativeToRoot(newItem: String) = rootDirectoryOfProject / newItem
 
   def scalaProject = scala.tools.eclipse.ScalaProject(getProject)
 
-  def outputFolders = scalaProject outputFolders
-
   def objToString[T](x: T) = x.toString
 
-  def outputFoldersPaths = outputFolders map { x => new File(rootDirectoryOfWorkspace, x.toString) } toArray
+  def outputFolders = scalaProject outputFolders
+  def outputFoldersFiles = outputFolders map ipathToFile map { f => rootDirectoryOfWorkspace / f.toString }
 
-  def rootDirectoryOfProject = {
-    getProject.getLocation.toOSString
-  }
+  def rootDirectoryOfProject = ipathToFile(getProject.getLocation)
 
   def rootDirectoryOfWorkspace = {
-    ResourcesPlugin.getWorkspace.getRoot.getLocation.toOSString
+    ipathToFile(ResourcesPlugin.getWorkspace.getRoot.getLocation)
   }
 
-  def pathForJarFile[T](c: Class[T]) = {
+  def pathForJarFileContainingClass[T](c: Class[T]) = {
+    println("getting class " + c)
     c.getProtectionDomain.getCodeSource.getLocation.getPath
   }
 
   def loadClassIntoJRuby[T](c: Class[T]) = {
-    val p = pathForJarFile(c)
+    val p = pathForJarFileContainingClass(c)
     loadJarIntoJRuby(p)
   }
 
@@ -75,13 +106,16 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
     JrubyEnvironmentSetup.addJarToLoadPathAndRequire(path)
   }
 
-  def pluginDirectory = {
+  def pathToFileRelativeToPluginBundle(p: Path) = {
     val bundle = Platform.getBundle("com.restphone.androidproguardscala");
-    val path = new Path("/");
-    val fileURL = FileLocator.find(bundle, path, null);
-    val f = FileLocator.toFileURL(fileURL)
-    f.getFile
+    val entry = bundle.getEntry(p.toString)
+//    val fileURL = FileLocator.find(bundle, p, null);
+    val f = FileLocator.toFileURL(entry)
+    println("relfile:" + f)
+    new File(f.getFile)
   }
+
+  def pluginDirectory = pathToFileRelativeToPluginBundle(new Path("/"))
 }
 
 object AndroidProguardScalaBuilder {
@@ -151,4 +185,12 @@ class RichFile(f: File) {
 object RichFile {
   implicit def toRichFile(f: File): RichFile = new RichFile(f)
   def toFilenameAsString(f: File) = f.toString
+  def stringToFile(f: String) = new File(f)
+  def ipathToFile(p: IPath) = p.toFile
+  def slurp(f: File) = {
+    val s = scala.io.Source.fromFile(f)
+    val result = s.getLines.mkString("\n")
+    s.close()
+    result
+  }
 }
