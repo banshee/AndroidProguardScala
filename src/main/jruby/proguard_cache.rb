@@ -85,17 +85,24 @@ cache_dir: Where the cached jars are stored
 Example: jruby -S rake -T -v proguard[proguard_android_scala.config,proguard_cache/scala-proguard.jar]
 "
 
-  def build_proguard_dependencies input_directories, proguard_config_file, destination_jar, cache_dir = nil, cache_jar_pattern = nil
-    proguard_config_file or raise "You must specify a proguard config file"
+  def build_proguard_dependencies args
+    args = HashViaGet.new args
+
+    input_directories = args['classFiles']
+    proguard_config_file = args['proguardProcessedConfFile']
+    destination_jar = args['outputJar']
+    cache_dir = args['cacheDir']
+    cached_jar = args['cachedJar']
+
+    proguard_config_file or raise "You must specify proguardProcessedConfFile"
     destination_jar or raise "You must specify a destination jar"
-    cache_jar_pattern ||= cache_dir + "/scala-library.CKSUM.jar"
     cache_dir ||= "proguard_cache"
 
     proguard_dependency_files = build_dependency_files input_directories, cache_dir
 
     dependency_checksum = checksum_of_lines_in_files(proguard_dependency_files + [proguard_config_file])
 
-    proguard_destination_file = proguard_output cache_jar_pattern, dependency_checksum
+    proguard_destination_file = proguard_output cached_jar, dependency_checksum
 
     contents = unique_lines_in_files_as_string proguard_dependency_files
     File.open "#{cache_dir}/dependency_lines." + dependency_checksum, "w" do |f|
@@ -115,20 +122,45 @@ Example: jruby -S rake -T -v proguard[proguard_android_scala.config,proguard_cac
     FileUtils.install args[:proguard_destination_file], args[:destination_jar], :mode => 0666, :verbose => true
   end
 
+  # Given
+  def build_proguard_file args
+    require 'tempfile'
+    Tempfile.open("android_scala_proguard") do |f|
+      defaults = args['proguardDefaults']
+      scala_library_jar = args['scalaLibraryJar']
+      f.puts %Q[-injars "#{scala_library_jar}"(!META-INF/MANIFEST.MF,!library.properties)]
+      f.puts %Q[-outjar "#{args['cachedJar']}"]
+      args['classFiles'].each do |classfile|
+        f.puts %Q[-injar "#{classfile}"]
+      end
+      f.write defaults
+      if File.exists? args['proguardAdditionsFile']
+        additions_file = File.new args['proguardAdditionsFile']
+        f.write additions_file.read
+      end
+      f.flush
+      FileUtils.install f.path, args['proguardProcessedConfFile'], :mode => 0666, :verbose => true
+    end
+  end
+
   #  ProguardCache.new.build_dependency_files_and_final_jar %w(target/scala-2.9.1), "proguard_config/proguard_android_scala.config.unix", "/tmp/out.jar", "target/proguard_cache"
-  def build_dependency_files_and_final_jar input_directories, proguard_config_file, destination_jar, cache_dir, cache_jar_pattern
-    require 'pp'
-    input_directories.each do |i|
+  def build_dependency_files_and_final_jar args
+    #    "classFiles" -> outputFoldersFiles,
+    #    "proguardDefaults" -> proguardDefaults,
+    #    "proguardConfFile" -> proguardConfFile,
+    #    "proguardProcessedConfFile" -> proguardProcessedConfFile,
+    #    "cachedJar" -> cachedJar,
+    #    "outputJar" -> outputJar)
+    require 'hash_via_get'
+    args = HashViaGet.new args
+    pp "args are ", args
+    args['classFiles'].each do |i|
       raise "non-existant input directory: " + i.to_s unless File.exists? i.to_s
       puts "input directory: #{i}"
     end
-    puts "Starting to build cached scala lib: " + {
-      :proguard_config_file => proguard_config_file,
-      :destination_jar => destination_jar,
-      :cache_dir => cache_dir,
-      :cache_jar_pattern => cache_jar_pattern
-    }.pretty_inspect
-    result = build_proguard_dependencies input_directories, proguard_config_file, destination_jar, cache_dir, cache_jar_pattern
+    build_proguard_file args
+    result = build_proguard_dependencies args
+    pp 'reesultis', result
     run_proguard result
   end
 end

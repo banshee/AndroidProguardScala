@@ -29,7 +29,7 @@ class JrubyEnvironmentSetup
   def self.add_to_load_path file
     require 'pathname'
     $LOAD_PATH << file
-    puts "new load path: " + $LOAD_PATH.join(",")
+    puts "new load path: " + $LOAD_PATH.join(",\n")
   end
 
   java_signature 'void addJarToLoadPathAndRequire(String jarfileFullPath)'
@@ -41,7 +41,7 @@ class JrubyEnvironmentSetup
     require f.basename
     puts %Q{require "#{f.parent}"}
     puts %Q{require "#{f.basename}"}
-    puts "new load path: " + $LOAD_PATH.join(",")
+    puts "new load path: " + $LOAD_PATH.join(",\n")
   end
 
   java_signature 'void addIvyDirectoryToLoadPath(String dir)'
@@ -54,7 +54,7 @@ class JrubyEnvironmentSetup
       case j
       when /asm-3.3.1.jar/, /proguard-base-4.6.jar/
         $LOAD_PATH << f.parent
-        puts "new load path: " + $LOAD_PATH.join(",")
+        puts "new load path: " + $LOAD_PATH.join(",\n")
       end
     end
   end

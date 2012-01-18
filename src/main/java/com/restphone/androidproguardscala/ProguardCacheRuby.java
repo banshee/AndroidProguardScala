@@ -100,17 +100,24 @@ public class ProguardCacheRuby extends RubyObject  {
             "Example: jruby -S rake -T -v proguard[proguard_android_scala.config,proguard_cache/scala-proguard.jar]\n" +
             "\"\n" +
             "\n" +
-            "  def build_proguard_dependencies input_directories, proguard_config_file, destination_jar, cache_dir = nil, cache_jar_pattern = nil\n" +
-            "    proguard_config_file or raise \"You must specify a proguard config file\"\n" +
+            "  def build_proguard_dependencies args\n" +
+            "    args = HashViaGet.new args\n" +
+            "\n" +
+            "    input_directories = args['classFiles']\n" +
+            "    proguard_config_file = args['proguardProcessedConfFile']\n" +
+            "    destination_jar = args['outputJar']\n" +
+            "    cache_dir = args['cacheDir']\n" +
+            "    cached_jar = args['cachedJar']\n" +
+            "\n" +
+            "    proguard_config_file or raise \"You must specify proguardProcessedConfFile\"\n" +
             "    destination_jar or raise \"You must specify a destination jar\"\n" +
-            "    cache_jar_pattern ||= cache_dir + \"/scala-library.CKSUM.jar\"\n" +
             "    cache_dir ||= \"proguard_cache\"\n" +
             "\n" +
             "    proguard_dependency_files = build_dependency_files input_directories, cache_dir\n" +
             "\n" +
             "    dependency_checksum = checksum_of_lines_in_files(proguard_dependency_files + [proguard_config_file])\n" +
             "\n" +
-            "    proguard_destination_file = proguard_output cache_jar_pattern, dependency_checksum\n" +
+            "    proguard_destination_file = proguard_output cached_jar, dependency_checksum\n" +
             "\n" +
             "    contents = unique_lines_in_files_as_string proguard_dependency_files\n" +
             "    File.open \"#{cache_dir}/dependency_lines.\" + dependency_checksum, \"w\" do |f|\n" +
@@ -130,20 +137,45 @@ public class ProguardCacheRuby extends RubyObject  {
             "    FileUtils.install args[:proguard_destination_file], args[:destination_jar], :mode => 0666, :verbose => true\n" +
             "  end\n" +
             "\n" +
+            "  # Given\n" +
+            "  def build_proguard_file args\n" +
+            "    require 'tempfile'\n" +
+            "    Tempfile.open(\"android_scala_proguard\") do |f|\n" +
+            "      defaults = args['proguardDefaults']\n" +
+            "      scala_library_jar = args['scalaLibraryJar']\n" +
+            "      f.puts %Q[-injars \"#{scala_library_jar}\"(!META-INF/MANIFEST.MF,!library.properties)]\n" +
+            "      f.puts %Q[-outjar \"#{args['cachedJar']}\"]\n" +
+            "      args['classFiles'].each do |classfile|\n" +
+            "        f.puts %Q[-injar \"#{classfile}\"]\n" +
+            "      end\n" +
+            "      f.write defaults\n" +
+            "      if File.exists? args['proguardAdditionsFile']\n" +
+            "        additions_file = File.new args['proguardAdditionsFile']\n" +
+            "        f.write additions_file.read\n" +
+            "      end\n" +
+            "      f.flush\n" +
+            "      FileUtils.install f.path, args['proguardProcessedConfFile'], :mode => 0666, :verbose => true\n" +
+            "    end\n" +
+            "  end\n" +
+            "\n" +
             "  #  ProguardCache.new.build_dependency_files_and_final_jar %w(target/scala-2.9.1), \"proguard_config/proguard_android_scala.config.unix\", \"/tmp/out.jar\", \"target/proguard_cache\"\n" +
-            "  def build_dependency_files_and_final_jar input_directories, proguard_config_file, destination_jar, cache_dir, cache_jar_pattern\n" +
-            "    require 'pp'\n" +
-            "    input_directories.each do |i|\n" +
+            "  def build_dependency_files_and_final_jar args\n" +
+            "    #    \"classFiles\" -> outputFoldersFiles,\n" +
+            "    #    \"proguardDefaults\" -> proguardDefaults,\n" +
+            "    #    \"proguardConfFile\" -> proguardConfFile,\n" +
+            "    #    \"proguardProcessedConfFile\" -> proguardProcessedConfFile,\n" +
+            "    #    \"cachedJar\" -> cachedJar,\n" +
+            "    #    \"outputJar\" -> outputJar)\n" +
+            "    require 'hash_via_get'\n" +
+            "    args = HashViaGet.new args\n" +
+            "    pp \"args are \", args\n" +
+            "    args['classFiles'].each do |i|\n" +
             "      raise \"non-existant input directory: \" + i.to_s unless File.exists? i.to_s\n" +
             "      puts \"input directory: #{i}\"\n" +
             "    end\n" +
-            "    puts \"Starting to build cached scala lib: \" + {\n" +
-            "      :proguard_config_file => proguard_config_file,\n" +
-            "      :destination_jar => destination_jar,\n" +
-            "      :cache_dir => cache_dir,\n" +
-            "      :cache_jar_pattern => cache_jar_pattern\n" +
-            "    }.pretty_inspect\n" +
-            "    result = build_proguard_dependencies input_directories, proguard_config_file, destination_jar, cache_dir, cache_jar_pattern\n" +
+            "    build_proguard_file args\n" +
+            "    result = build_proguard_dependencies args\n" +
+            "    pp 'reesultis', result\n" +
             "    run_proguard result\n" +
             "  end\n" +
             "end\n" +
@@ -258,14 +290,8 @@ public class ProguardCacheRuby extends RubyObject  {
     }
 
     
-    public Object build_proguard_dependencies(Object input_directories, Object proguard_config_file, Object destination_jar, Object cache_dir, Object cache_jar_pattern) {
-        IRubyObject ruby_args[] = new IRubyObject[5];
-        ruby_args[0] = JavaUtil.convertJavaToRuby(__ruby__, input_directories);
-        ruby_args[1] = JavaUtil.convertJavaToRuby(__ruby__, proguard_config_file);
-        ruby_args[2] = JavaUtil.convertJavaToRuby(__ruby__, destination_jar);
-        ruby_args[3] = JavaUtil.convertJavaToRuby(__ruby__, cache_dir);
-        ruby_args[4] = JavaUtil.convertJavaToRuby(__ruby__, cache_jar_pattern);
-
+    public Object build_proguard_dependencies(Object args) {
+        IRubyObject ruby_args = JavaUtil.convertJavaToRuby(__ruby__, args);
         IRubyObject ruby_result = RuntimeHelpers.invoke(__ruby__.getCurrentContext(), this, "build_proguard_dependencies", ruby_args);
         return (Object)ruby_result.toJava(Object.class);
 
@@ -280,14 +306,16 @@ public class ProguardCacheRuby extends RubyObject  {
     }
 
     
-    public Object build_dependency_files_and_final_jar(Object input_directories, Object proguard_config_file, Object destination_jar, Object cache_dir, Object cache_jar_pattern) {
-        IRubyObject ruby_args[] = new IRubyObject[5];
-        ruby_args[0] = JavaUtil.convertJavaToRuby(__ruby__, input_directories);
-        ruby_args[1] = JavaUtil.convertJavaToRuby(__ruby__, proguard_config_file);
-        ruby_args[2] = JavaUtil.convertJavaToRuby(__ruby__, destination_jar);
-        ruby_args[3] = JavaUtil.convertJavaToRuby(__ruby__, cache_dir);
-        ruby_args[4] = JavaUtil.convertJavaToRuby(__ruby__, cache_jar_pattern);
+    public Object build_proguard_file(Object args) {
+        IRubyObject ruby_args = JavaUtil.convertJavaToRuby(__ruby__, args);
+        IRubyObject ruby_result = RuntimeHelpers.invoke(__ruby__.getCurrentContext(), this, "build_proguard_file", ruby_args);
+        return (Object)ruby_result.toJava(Object.class);
 
+    }
+
+    
+    public Object build_dependency_files_and_final_jar(Object args) {
+        IRubyObject ruby_args = JavaUtil.convertJavaToRuby(__ruby__, args);
         IRubyObject ruby_result = RuntimeHelpers.invoke(__ruby__.getCurrentContext(), this, "build_dependency_files_and_final_jar", ruby_args);
         return (Object)ruby_result.toJava(Object.class);
 
