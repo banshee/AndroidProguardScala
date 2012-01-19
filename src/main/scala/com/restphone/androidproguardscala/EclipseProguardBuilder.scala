@@ -17,6 +17,13 @@ import proguard.Initializer
 import org.eclipse.core.runtime.IPath
 import org.eclipse.jdt.internal.core.JavaProject
 import org.eclipse.jdt.core.JavaCore
+import org.eclipse.core.runtime.Status
+import org.eclipse.core.runtime.IStatus
+
+trait ProvidesLogging {
+  def logMsg(msg: String)
+  def logError(msg: String)
+}
 
 class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   import RichFile._
@@ -24,10 +31,16 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   override def build(kind: Int, args: java.util.Map[String, String], monitor: IProgressMonitor): Array[IProject] = {
     val scalaArgs = mapAsScalaMap(args.asInstanceOf[java.util.Map[String, String]])
 
+    val proguardDefaults = slurp(pathToFileRelativeToPluginBundle(new Path("proguard_cache_conf/proguard_defaults.conf")))
+
     val cacheDirectory = rootDirectoryOfProject / "proguard_cache"
     val confDirectory = rootDirectoryOfProject / "proguard_cache_conf"
+    val libDirectory = rootDirectoryOfProject / "lib"
 
-    val proguardDefaults = slurp(pathToFileRelativeToPluginBundle(confDirectory / "proguard_defaults.conf"))
+    cacheDirectory.mkdir
+    confDirectory.mkdir
+    libDirectory.mkdir
+
     val proguardProcessedConfFile = confDirectory / "proguard_postprocessed.conf"
     val proguardAdditionsFile = confDirectory / "proguard_additions.conf"
 
@@ -43,7 +56,8 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
       "proguardProcessedConfFile" -> proguardProcessedConfFile.getAbsolutePath,
       "cachedJar" -> cachedJar.getAbsolutePath,
       "outputJar" -> outputJar.getAbsolutePath,
-      "scalaLibraryJar" -> pathToScalaLibraryJar)
+      "scalaLibraryJar" -> pathToScalaLibraryJar,
+      "logger" -> logger())
 
     println("-------------------------------------------")
     println("params are " + parameters)
@@ -53,6 +67,13 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
     Array.empty
   }
 
+  val outerThis = this
+  
+  def logger() = new ProvidesLogging {
+    def logMsg(msg: String) = outerThis.logMsg(msg)
+    def logError(msg: String) = outerThis.logMsg(msg, IStatus.ERROR)
+  }
+
   def pathToScalaLibraryJar = {
     val lastSegmentIsScalaLibrary = (p: IPath) => p.lastSegment.equals("scala-library.jar")
     val fileExists = (p: IPath) => p.toFile.exists
@@ -60,7 +81,7 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
     val p = JavaCore.create(getProject)
     val paths = p.getResolvedClasspath(false) map { _.getPath }
     val entry = paths filter lastSegmentIsScalaLibrary find fileExists
-    
+
     entry.get
   }
 
@@ -107,16 +128,23 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
     JrubyEnvironmentSetup.addJarToLoadPathAndRequire(path)
   }
 
+  val bundle = Platform.getBundle("com.restphone.androidproguardscala");
+
   def pathToFileRelativeToPluginBundle(p: IPath) = {
-    val bundle = Platform.getBundle("com.restphone.androidproguardscala");
     val entry = bundle.getEntry(p.toString)
-//    val fileURL = FileLocator.find(bundle, p, null);
     val f = FileLocator.toFileURL(entry)
-    println("relfile:" + f)
     new File(f.getFile)
   }
 
   def pluginDirectory = pathToFileRelativeToPluginBundle(new Path("/"))
+
+  def logMsg(msg: String, status: Integer = IStatus.OK) = {
+    val log = Platform.getLog(bundle);
+    val s = new Status(status, pluginId, msg)
+    log.log(s)
+  }
+
+  val pluginId = "com.restphone.androidproguardscala"
 }
 
 object AndroidProguardScalaBuilder {
@@ -167,22 +195,10 @@ object Proguarder {
   }
 }
 
-//-keepattributes Exceptions,InnerClasses,Signature,Deprecated,
-//                SourceFile,LineNumberTable,*Annotation*,EnclosingMethod
-//
-//# Change com.restphone to your own package
-//-keep public class com.restphone.* {
-//    *;
-//}
-//
-//-keep public class scala.App
-//-keep public class scala.DelayedInit
-//-keep public class scala.ScalaObject
-//-keep public class scala.Function0, scala.Function1, scala.collection.mutable.ListBuffer
-
 class RichFile(f: File) {
   def /(that: String) = new File(f, that)
 }
+
 object RichFile {
   implicit def toRichFile(f: File): RichFile = new RichFile(f)
   implicit def fileToPath(f: File): IPath = Path.fromOSString(f.toString)
