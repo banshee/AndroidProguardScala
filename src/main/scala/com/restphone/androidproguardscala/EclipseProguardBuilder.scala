@@ -25,14 +25,15 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
     val scalaArgs = mapAsScalaMap(args.asInstanceOf[java.util.Map[String, String]])
 
     val cacheDirectory = rootDirectoryOfProject / "proguard_cache"
+    val confDirectory = rootDirectoryOfProject / "proguard_cache_conf"
 
-    val proguardDefaults = slurp(pathToFileRelativeToPluginBundle(new Path("proguard_cache/proguard_defaults.conf")))
-    val proguardProcessedConfFile = cacheDirectory / "proguard_postprocessed.conf"
-    val proguardAdditionsFile = cacheDirectory / "proguard_additions.conf"
+    val proguardDefaults = slurp(pathToFileRelativeToPluginBundle(confDirectory / "proguard_defaults.conf"))
+    val proguardProcessedConfFile = confDirectory / "proguard_postprocessed.conf"
+    val proguardAdditionsFile = confDirectory / "proguard_additions.conf"
 
     val cachedJar = cacheDirectory / "scala-library.CKSUM.jar"
 
-    val outputJar = rootDirectoryOfProject / "lib" / "scala_lib_after_proguard.jar"
+    val outputJar = rootDirectoryOfProject / "lib" / "scala_library_android.jar"
 
     val parameters = Map(
       "cacheDir" -> cacheDirectory.getAbsolutePath,
@@ -106,7 +107,7 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
     JrubyEnvironmentSetup.addJarToLoadPathAndRequire(path)
   }
 
-  def pathToFileRelativeToPluginBundle(p: Path) = {
+  def pathToFileRelativeToPluginBundle(p: IPath) = {
     val bundle = Platform.getBundle("com.restphone.androidproguardscala");
     val entry = bundle.getEntry(p.toString)
 //    val fileURL = FileLocator.find(bundle, p, null);
@@ -184,6 +185,7 @@ class RichFile(f: File) {
 }
 object RichFile {
   implicit def toRichFile(f: File): RichFile = new RichFile(f)
+  implicit def fileToPath(f: File): IPath = Path.fromOSString(f.toString)
   def toFilenameAsString(f: File) = f.toString
   def stringToFile(f: String) = new File(f)
   def ipathToFile(p: IPath) = p.toFile
