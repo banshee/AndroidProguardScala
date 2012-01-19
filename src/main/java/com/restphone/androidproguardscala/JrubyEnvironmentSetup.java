@@ -36,7 +36,6 @@ public class JrubyEnvironmentSetup extends RubyObject  {
             "      full_path = \"META-INF/jruby.home/lib/ruby/#{path}\"\n" +
             "      $LOAD_PATH << full_path unless $LOAD_PATH.include?(full_path)\n" +
             "    end\n" +
-            "    puts \"load path: \" + $LOAD_PATH.join(\"\\n\")\n" +
             "  end\n" +
             "\n" +
             "  java_signature 'void addToLoadPath(String file)'\n" +
@@ -44,7 +43,6 @@ public class JrubyEnvironmentSetup extends RubyObject  {
             "  def self.add_to_load_path file\n" +
             "    require 'pathname'\n" +
             "    $LOAD_PATH << file\n" +
-            "    puts \"new load path: \" + $LOAD_PATH.join(\",\\n\")\n" +
             "  end\n" +
             "\n" +
             "  java_signature 'void addJarToLoadPathAndRequire(String jarfileFullPath)'\n" +
@@ -56,7 +54,6 @@ public class JrubyEnvironmentSetup extends RubyObject  {
             "    require f.basename\n" +
             "    puts %Q{require \"#{f.parent}\"}\n" +
             "    puts %Q{require \"#{f.basename}\"}\n" +
-            "    puts \"new load path: \" + $LOAD_PATH.join(\",\\n\")\n" +
             "  end\n" +
             "\n" +
             "  java_signature 'void addIvyDirectoryToLoadPath(String dir)'\n" +
@@ -69,7 +66,6 @@ public class JrubyEnvironmentSetup extends RubyObject  {
             "      case j\n" +
             "      when /asm-3.3.1.jar/, /proguard-base-4.6.jar/\n" +
             "        $LOAD_PATH << f.parent\n" +
-            "        puts \"new load path: \" + $LOAD_PATH.join(\",\\n\")\n" +
             "      end\n" +
             "    end\n" +
             "  end\n" +

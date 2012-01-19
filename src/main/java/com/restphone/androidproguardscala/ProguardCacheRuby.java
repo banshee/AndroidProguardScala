@@ -131,13 +131,24 @@ public class ProguardCacheRuby extends RubyObject  {
             "  end\n" +
             "\n" +
             "  def run_proguard args\n" +
-            "    if !File.exists?(args[:proguard_destination_file])\n" +
-            "      ProguardRunner.execute_proguard(:config_file => args[:proguard_config_file], :cksum => \".#{args[:dependency_checksum]}\")\n" +
+            "    destination_file = args[:proguard_destination_file]\n" +
+            "    logger = args['logger']\n" +
+            "    config_file = args[:proguard_config_file]\n" +
+            "    if !File.exists?(destination_file)\n" +
+            "      logger.logMsg(\"Running proguard with config file \" + config_file)\n" +
+            "      ProguardRunner.execute_proguard(:config_file => config_file, :cksum => \".#{args[:dependency_checksum]}\")\n" +
             "    end\n" +
-            "    FileUtils.install args[:proguard_destination_file], args[:destination_jar], :mode => 0666, :verbose => true\n" +
+            "    logger.logMsg(\"Proguard output file is \" + destination_file)\n" +
+            "    if File.exists?(destination_file)\n" +
+            "      destination_jar = args[:destination_jar]\n" +
+            "      FileUtils.install destination_file, destination_jar, :mode => 0666, :verbose => true\n" +
+            "      logger.logMsg(\"installed #{destination_file} to #{destination_jar}\")\n" +
+            "    else\n" +
+            "      logger.logError(\"No proguard output found at \" + destination_file)\n" +
+            "      File.unlink destination_jar\n" +
+            "    end\n" +
             "  end\n" +
             "\n" +
-            "  # Given\n" +
             "  def build_proguard_file args\n" +
             "    require 'tempfile'\n" +
             "    Tempfile.open(\"android_scala_proguard\") do |f|\n" +
@@ -154,29 +165,23 @@ public class ProguardCacheRuby extends RubyObject  {
             "        f.write additions_file.read\n" +
             "      end\n" +
             "      f.flush\n" +
-            "      FileUtils.install f.path, args['proguardProcessedConfFile'], :mode => 0666, :verbose => true\n" +
+            "      conf_file = args['proguardProcessedConfFile']\n" +
+            "      FileUtils.install f.path, conf_file, :mode => 0666, :verbose => true\n" +
+            "      args['logger'].logMsg(\"Created new proguard configuration at #{conf_file}\")\n" +
             "    end\n" +
             "  end\n" +
             "\n" +
-            "  #  ProguardCache.new.build_dependency_files_and_final_jar %w(target/scala-2.9.1), \"proguard_config/proguard_android_scala.config.unix\", \"/tmp/out.jar\", \"target/proguard_cache\"\n" +
             "  def build_dependency_files_and_final_jar args\n" +
-            "    #    \"classFiles\" -> outputFoldersFiles,\n" +
-            "    #    \"proguardDefaults\" -> proguardDefaults,\n" +
-            "    #    \"proguardConfFile\" -> proguardConfFile,\n" +
-            "    #    \"proguardProcessedConfFile\" -> proguardProcessedConfFile,\n" +
-            "    #    \"cachedJar\" -> cachedJar,\n" +
-            "    #    \"outputJar\" -> outputJar)\n" +
             "    require 'hash_via_get'\n" +
             "    args = HashViaGet.new args\n" +
-            "    pp \"args are \", args\n" +
+            "    logger = args['logger']\n" +
             "    args['classFiles'].each do |i|\n" +
             "      raise \"non-existant input directory: \" + i.to_s unless File.exists? i.to_s\n" +
             "      puts \"input directory: #{i}\"\n" +
             "    end\n" +
             "    build_proguard_file args\n" +
             "    result = build_proguard_dependencies args\n" +
-            "    pp 'reesultis', result\n" +
-            "    run_proguard result\n" +
+            "    run_proguard result.merge('logger' => args['logger'])\n" +
             "  end\n" +
             "end\n" +
             "").toString();

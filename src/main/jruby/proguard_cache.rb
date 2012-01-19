@@ -116,13 +116,24 @@ Example: jruby -S rake -T -v proguard[proguard_android_scala.config,proguard_cac
   end
 
   def run_proguard args
-    if !File.exists?(args[:proguard_destination_file])
-      ProguardRunner.execute_proguard(:config_file => args[:proguard_config_file], :cksum => ".#{args[:dependency_checksum]}")
+    destination_file = args[:proguard_destination_file]
+    logger = args['logger']
+    config_file = args[:proguard_config_file]
+    if !File.exists?(destination_file)
+      logger.logMsg("Running proguard with config file " + config_file)
+      ProguardRunner.execute_proguard(:config_file => config_file, :cksum => ".#{args[:dependency_checksum]}")
     end
-    FileUtils.install args[:proguard_destination_file], args[:destination_jar], :mode => 0666, :verbose => true
+    logger.logMsg("Proguard output file is " + destination_file)
+    if File.exists?(destination_file)
+      destination_jar = args[:destination_jar]
+      FileUtils.install destination_file, destination_jar, :mode => 0666, :verbose => true
+      logger.logMsg("installed #{destination_file} to #{destination_jar}")
+    else
+      logger.logError("No proguard output found at " + destination_file)
+      File.unlink destination_jar
+    end
   end
 
-  # Given
   def build_proguard_file args
     require 'tempfile'
     Tempfile.open("android_scala_proguard") do |f|
@@ -139,28 +150,22 @@ Example: jruby -S rake -T -v proguard[proguard_android_scala.config,proguard_cac
         f.write additions_file.read
       end
       f.flush
-      FileUtils.install f.path, args['proguardProcessedConfFile'], :mode => 0666, :verbose => true
+      conf_file = args['proguardProcessedConfFile']
+      FileUtils.install f.path, conf_file, :mode => 0666, :verbose => true
+      args['logger'].logMsg("Created new proguard configuration at #{conf_file}")
     end
   end
 
-  #  ProguardCache.new.build_dependency_files_and_final_jar %w(target/scala-2.9.1), "proguard_config/proguard_android_scala.config.unix", "/tmp/out.jar", "target/proguard_cache"
   def build_dependency_files_and_final_jar args
-    #    "classFiles" -> outputFoldersFiles,
-    #    "proguardDefaults" -> proguardDefaults,
-    #    "proguardConfFile" -> proguardConfFile,
-    #    "proguardProcessedConfFile" -> proguardProcessedConfFile,
-    #    "cachedJar" -> cachedJar,
-    #    "outputJar" -> outputJar)
     require 'hash_via_get'
     args = HashViaGet.new args
-    pp "args are ", args
+    logger = args['logger']
     args['classFiles'].each do |i|
       raise "non-existant input directory: " + i.to_s unless File.exists? i.to_s
       puts "input directory: #{i}"
     end
     build_proguard_file args
     result = build_proguard_dependencies args
-    pp 'reesultis', result
-    run_proguard result
+    run_proguard result.merge('logger' => args['logger'])
   end
 end
