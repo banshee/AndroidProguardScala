@@ -154,12 +154,17 @@ public class ProguardCacheRuby extends RubyObject  {
             "    Tempfile.open(\"android_scala_proguard\") do |f|\n" +
             "      defaults = args['proguardDefaults']\n" +
             "      scala_library_jar = args['scalaLibraryJar']\n" +
-            "      f.puts %Q[-injars \"#{scala_library_jar}\"(!META-INF/MANIFEST.MF,!library.properties)]\n" +
+            "      f.puts \"# scala-library.jar was calculated from the classpath\"\n" +
+            "      f.puts %Q[-injars \"#{scala_library_jar}\"(!META-INF/MANIFEST.MF,!library.properties)\\n]\n" +
+            "      f.puts \"\\n# The CKSUM string is significant - it will be replaced with an actual checksum\"\n" +
             "      f.puts %Q[-outjar \"#{args['cachedJar']}\"]\n" +
             "      args['classFiles'].each do |classfile|\n" +
             "        f.puts %Q[-injar \"#{classfile}\"]\n" +
             "      end\n" +
+            "      \n" +
+            "      f.puts \"\\n# Builtin defaults\"\n" +
             "      f.write defaults\n" +
+            "      f.puts \"\\n# Inserting file #{args['proguardAdditionsFile']} - possibly empty\"\n" +
             "      if File.exists? args['proguardAdditionsFile']\n" +
             "        additions_file = File.new args['proguardAdditionsFile']\n" +
             "        f.write additions_file.read\n" +

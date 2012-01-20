@@ -139,12 +139,17 @@ Example: jruby -S rake -T -v proguard[proguard_android_scala.config,proguard_cac
     Tempfile.open("android_scala_proguard") do |f|
       defaults = args['proguardDefaults']
       scala_library_jar = args['scalaLibraryJar']
-      f.puts %Q[-injars "#{scala_library_jar}"(!META-INF/MANIFEST.MF,!library.properties)]
+      f.puts "# scala-library.jar was calculated from the classpath"
+      f.puts %Q[-injars "#{scala_library_jar}"(!META-INF/MANIFEST.MF,!library.properties)\n]
+      f.puts "\n# The CKSUM string is significant - it will be replaced with an actual checksum"
       f.puts %Q[-outjar "#{args['cachedJar']}"]
       args['classFiles'].each do |classfile|
         f.puts %Q[-injar "#{classfile}"]
       end
+      
+      f.puts "\n# Builtin defaults"
       f.write defaults
+      f.puts "\n# Inserting file #{args['proguardAdditionsFile']} - possibly empty"
       if File.exists? args['proguardAdditionsFile']
         additions_file = File.new args['proguardAdditionsFile']
         f.write additions_file.read
