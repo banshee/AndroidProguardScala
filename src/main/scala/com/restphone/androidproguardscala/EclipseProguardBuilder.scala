@@ -59,9 +59,6 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
       "scalaLibraryJar" -> pathToScalaLibraryJar,
       "logger" -> logger())
 
-    println("-------------------------------------------")
-    println("params are " + parameters)
-
     rubyCacheController.build_dependency_files_and_final_jar(parameters)
 
     Array.empty
@@ -93,7 +90,6 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
     loadClassIntoJRuby(classOf[List[String]])
 
     val jrubyLibDir = pluginDirectory / "src/main/jruby"
-    println("jrubylibdir is " + jrubyLibDir)
     JrubyEnvironmentSetup.addToLoadPath(jrubyLibDir.toString)
 
     new ProguardCacheRuby
@@ -115,7 +111,6 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   }
 
   def pathForJarFileContainingClass[T](c: Class[T]) = {
-    println("getting class " + c)
     c.getProtectionDomain.getCodeSource.getLocation.getPath
   }
 
@@ -153,12 +148,10 @@ object AndroidProguardScalaBuilder {
 
 class Activator extends org.eclipse.ui.plugin.AbstractUIPlugin {
   override def startup = {
-    println("starwerup")
     super.startup();
   }
 
   override def start(context: BundleContext) {
-    println("contextaseer is " + context)
     super.start(context);
   }
 }
