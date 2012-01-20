@@ -65,21 +65,23 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   }
 
   val outerThis = this
-  
+
   def logger() = new ProvidesLogging {
     def logMsg(msg: String) = outerThis.logMsg(msg)
     def logError(msg: String) = outerThis.logMsg(msg, IStatus.ERROR)
   }
 
+  val lastSegmentIsScalaLibrary = (p: IPath) => p.lastSegment.equals("scala-library.jar")
+  val fileExists = (p: IPath) => p.toFile.exists
+
   def pathToScalaLibraryJar = {
-    val lastSegmentIsScalaLibrary = (p: IPath) => p.lastSegment.equals("scala-library.jar")
-    val fileExists = (p: IPath) => p.toFile.exists
+    val entry = getResolvedClasspathEntries filter lastSegmentIsScalaLibrary find fileExists
+    entry getOrElse null
+  }
 
+  def getResolvedClasspathEntries() = {
     val p = JavaCore.create(getProject)
-    val paths = p.getResolvedClasspath(false) map { _.getPath }
-    val entry = paths filter lastSegmentIsScalaLibrary find fileExists
-
-    entry.get
+    p.getResolvedClasspath(false) map { _.getPath }
   }
 
   lazy val rubyCacheController = {
