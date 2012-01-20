@@ -34,7 +34,7 @@
             nameFilter="*"
             id="AndroidProguardScala.contribution1">
          <action
-               label="Add/Remove AndroidProguardScala Nature"
+               label="Toggle AndroidProguardScala Nature"
                class="com.restphone.androidproguardscala.ToggleNatureAction"
                menubarPath="additions"
                enablesFor="+"
