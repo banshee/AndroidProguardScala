@@ -19,3 +19,9 @@ BUILDING
   As of 29 June 2010, that's found at:
 
     http://www.eclipse.org/downloads/index_project.php
+
+SBT
+
+If you prefer to use sbt, this project has a related (but not identical) system for sbt:
+
+https://github.com/banshee/ProguardCache
