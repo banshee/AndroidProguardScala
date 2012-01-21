@@ -1,5 +1,4 @@
 package com.restphone.androidproguardscala
-
 import java.io.File
 import scala.collection.JavaConversions.mapAsScalaMap
 import scala.collection.JavaConversions.seqAsJavaList
@@ -28,7 +27,15 @@ trait ProvidesLogging {
 class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   import RichFile._
 
+  def pathIsBuildArtifact(p: IPath) = p.lastSegment.indexOf("proguard_") == 0
+  
   override def build(kind: Int, args: java.util.Map[String, String], monitor: IProgressMonitor): Array[IProject] = {
+    val d = getDelta(getProject)
+    val affected_paths = d.getAffectedChildren map {_.getFullPath}
+    val buildRequired = !(affected_paths filterNot pathIsBuildArtifact isEmpty)
+    
+    logMsg(pluginId + " build is required: " + buildRequired)
+
     val scalaArgs = mapAsScalaMap(args.asInstanceOf[java.util.Map[String, String]])
 
     val proguardDefaults = slurp(pathToFileRelativeToPluginBundle(new Path("proguard_cache_conf/proguard_defaults.conf")))
@@ -37,19 +44,23 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
     val confDirectory = rootDirectoryOfProject / "proguard_cache_conf"
     val libDirectory = rootDirectoryOfProject / "lib"
 
-    cacheDirectory.mkdir
-    confDirectory.mkdir
-    libDirectory.mkdir
+    Seq(cacheDirectory, confDirectory, libDirectory) foreach ensureDirExists
 
     val proguardProcessedConfFile = confDirectory / "proguard_postprocessed.conf"
     val proguardAdditionsFile = confDirectory / "proguard_additions.conf"
 
     val cachedJar = cacheDirectory / "scala-library.CKSUM.jar"
 
-    val outputJar = rootDirectoryOfProject / "lib" / "scala_library_android.jar"
+    val outputJar = rootDirectoryOfProject / "lib" / "scala_library.min.jar"
 
-    val parameters = Map(
+    import scala.collection.JavaConversions.asJavaMap
+
+    // Using asJavaMap because JRuby has magic that adds many Ruby Hash methods to 
+    // Java Map objects.
+    val parameters = asJavaMap(Map(
       "cacheDir" -> cacheDirectory.getAbsolutePath,
+      "confDir" -> confDirectory.getAbsolutePath,
+      "workspaceDir" -> rootDirectoryOfWorkspace.getAbsolutePath,
       "classFiles" -> (outputFoldersFiles map objToString toArray),
       "proguardDefaults" -> proguardDefaults,
       "proguardAdditionsFile" -> proguardAdditionsFile.getAbsolutePath,
@@ -57,9 +68,11 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
       "cachedJar" -> cachedJar.getAbsolutePath,
       "outputJar" -> outputJar.getAbsolutePath,
       "scalaLibraryJar" -> pathToScalaLibraryJar,
-      "logger" -> logger())
+      "androidLibraryJar" -> pathToAndroidJar,
+      "logger" -> logger()))
 
-    rubyCacheController.build_dependency_files_and_final_jar(parameters)
+    if (buildRequired)
+      rubyCacheController.build_dependency_files_and_final_jar(parameters)
 
     Array.empty
   }
@@ -71,11 +84,18 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
     def logError(msg: String) = outerThis.logMsg(msg, IStatus.ERROR)
   }
 
-  val lastSegmentIsScalaLibrary = (p: IPath) => p.lastSegment.equals("scala-library.jar")
+  val lastSegmentIsString = (s: String) => (p: IPath) => p.lastSegment.equals(s)
+  val lastSegmentIsScalaLibrary = lastSegmentIsString("scala-library.jar")
+  val lastSegmentIsAndroidLibrary = lastSegmentIsString("android.jar")
   val fileExists = (p: IPath) => p.toFile.exists
 
   def pathToScalaLibraryJar = {
     val entry = getResolvedClasspathEntries filter lastSegmentIsScalaLibrary find fileExists
+    entry getOrElse null
+  }
+
+  def pathToAndroidJar = {
+    val entry = getResolvedClasspathEntries filter lastSegmentIsAndroidLibrary find fileExists
     entry getOrElse null
   }
 
@@ -97,13 +117,13 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
     new ProguardCacheRuby
   }
 
-  def relativeToRoot(newItem: String) = rootDirectoryOfProject / newItem
+  //  def relativeToRoot(newItem: String) = rootDirectoryOfProject / newItem
 
   def scalaProject = scala.tools.eclipse.ScalaProject(getProject)
 
   def objToString[T](x: T) = x.toString
 
-  def outputFolders = scalaProject outputFolders
+  def outputFolders: Seq[IPath] = scalaProject outputFolders
   def outputFoldersFiles = outputFolders map ipathToFile map { f => rootDirectoryOfWorkspace / f.toString }
 
   def rootDirectoryOfProject = ipathToFile(getProject.getLocation)
@@ -206,4 +226,6 @@ object RichFile {
     s.close()
     result
   }
+  def ensureDirExists(f: File) =
+    if (!f.exists) f.mkdir
 }
