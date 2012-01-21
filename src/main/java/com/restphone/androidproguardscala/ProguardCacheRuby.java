@@ -101,7 +101,7 @@ public class ProguardCacheRuby extends RubyObject  {
             "\"\n" +
             "\n" +
             "  def build_proguard_dependencies args\n" +
-            "    args = HashViaGet.new args\n" +
+            "    args = Hash[args]\n" +
             "\n" +
             "    input_directories = args['classFiles']\n" +
             "    proguard_config_file = args['proguardProcessedConfFile']\n" +
@@ -141,7 +141,7 @@ public class ProguardCacheRuby extends RubyObject  {
             "    logger.logMsg(\"Proguard output file is \" + destination_file)\n" +
             "    if File.exists?(destination_file)\n" +
             "      destination_jar = args[:destination_jar]\n" +
-            "      FileUtils.install destination_file, destination_jar, :mode => 0666, :verbose => true\n" +
+            "      FileUtils.install destination_file, destination_jar, :mode => 0666, :verbose => false\n" +
             "      logger.logMsg(\"installed #{destination_file} to #{destination_jar}\")\n" +
             "    else\n" +
             "      logger.logError(\"No proguard output found at \" + destination_file)\n" +
@@ -155,13 +155,19 @@ public class ProguardCacheRuby extends RubyObject  {
             "      defaults = args['proguardDefaults']\n" +
             "      scala_library_jar = args['scalaLibraryJar']\n" +
             "      f.puts \"# scala-library.jar was calculated from the classpath\"\n" +
-            "      f.puts %Q[-injars \"#{scala_library_jar}\"(!META-INF/MANIFEST.MF,!library.properties)\\n]\n" +
+            "      f.puts %Q[-injars \"#{scala_library_jar}\"(!META-INF/MANIFEST.MF)\\n]\n" +
             "      f.puts \"\\n# The CKSUM string is significant - it will be replaced with an actual checksum\"\n" +
             "      f.puts %Q[-outjar \"#{args['cachedJar']}\"]\n" +
             "      args['classFiles'].each do |classfile|\n" +
             "        f.puts %Q[-injar \"#{classfile}\"]\n" +
             "      end\n" +
-            "      \n" +
+            "\n" +
+            "      android_lib_jar = args['androidLibraryJar']\n" +
+            "      if android_lib_jar\n" +
+            "        f.puts \"\\n# Android library calculated from classpath\"\n" +
+            "        f.puts %Q(-libraryjars \"#{args['androidLibraryJar']}\")\n" +
+            "      end\n" +
+            "\n" +
             "      f.puts \"\\n# Builtin defaults\"\n" +
             "      f.write defaults\n" +
             "      f.puts \"\\n# Inserting file #{args['proguardAdditionsFile']} - possibly empty\"\n" +
@@ -171,22 +177,42 @@ public class ProguardCacheRuby extends RubyObject  {
             "      end\n" +
             "      f.flush\n" +
             "      conf_file = args['proguardProcessedConfFile']\n" +
-            "      FileUtils.install f.path, conf_file, :mode => 0666, :verbose => true\n" +
+            "      FileUtils.install f.path, conf_file, :mode => 0666, :verbose => false\n" +
             "      args['logger'].logMsg(\"Created new proguard configuration at #{conf_file}\")\n" +
             "    end\n" +
             "  end\n" +
             "\n" +
             "  def build_dependency_files_and_final_jar args\n" +
             "    require 'hash_via_get'\n" +
-            "    args = HashViaGet.new args\n" +
+            "    args = Hash[args]\n" +
             "    logger = args['logger']\n" +
+            "    setup_external_variables args\n" +
+            "    update_and_load_additional_libs_ruby_file args\n" +
+            "    args['classFiles'] = args['classFiles'] + ($ADDITIONAL_LIBS || [])\n" +
             "    args['classFiles'].each do |i|\n" +
             "      raise \"non-existant input directory: \" + i.to_s unless File.exists? i.to_s\n" +
             "      puts \"input directory: #{i}\"\n" +
             "    end\n" +
             "    build_proguard_file args\n" +
             "    result = build_proguard_dependencies args\n" +
-            "    run_proguard result.merge('logger' => args['logger'])\n" +
+            "    run_proguard result.merge('logger' => logger)\n" +
+            "  end\n" +
+            "\n" +
+            "  def update_and_load_additional_libs_ruby_file args\n" +
+            "    additional_file = args['confDir'] + \"/additional_libs.rb\"\n" +
+            "    if !File.exists? additional_file\n" +
+            "      File.open(additional_file, \"w\") do |f|\n" +
+            "        f.write \"# Auto-generated sample file. \"\n" +
+            "        f.write \"# $WORKSPACE_DIR is set to the path for the current workspace\"\n" +
+            "        f.write %Q{$ADDITIONAL_LIBS = [$WORKSPACE_DIR + \"/TestAndroidLibrary/bin/testandroidlibrary.jar\"]}\n" +
+            "      end\n" +
+            "    end\n" +
+            "    load additional_file\n" +
+            "  end\n" +
+            "\n" +
+            "  def setup_external_variables args\n" +
+            "    $WORKSPACE_DIR = args['workspaceDir']\n" +
+            "    $ADDITIONAL_LIBS = []\n" +
             "  end\n" +
             "end\n" +
             "").toString();
@@ -327,6 +353,22 @@ public class ProguardCacheRuby extends RubyObject  {
     public Object build_dependency_files_and_final_jar(Object args) {
         IRubyObject ruby_args = JavaUtil.convertJavaToRuby(__ruby__, args);
         IRubyObject ruby_result = RuntimeHelpers.invoke(__ruby__.getCurrentContext(), this, "build_dependency_files_and_final_jar", ruby_args);
+        return (Object)ruby_result.toJava(Object.class);
+
+    }
+
+    
+    public Object update_and_load_additional_libs_ruby_file(Object args) {
+        IRubyObject ruby_args = JavaUtil.convertJavaToRuby(__ruby__, args);
+        IRubyObject ruby_result = RuntimeHelpers.invoke(__ruby__.getCurrentContext(), this, "update_and_load_additional_libs_ruby_file", ruby_args);
+        return (Object)ruby_result.toJava(Object.class);
+
+    }
+
+    
+    public Object setup_external_variables(Object args) {
+        IRubyObject ruby_args = JavaUtil.convertJavaToRuby(__ruby__, args);
+        IRubyObject ruby_result = RuntimeHelpers.invoke(__ruby__.getCurrentContext(), this, "setup_external_variables", ruby_args);
         return (Object)ruby_result.toJava(Object.class);
 
     }

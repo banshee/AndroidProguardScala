@@ -86,7 +86,7 @@ Example: jruby -S rake -T -v proguard[proguard_android_scala.config,proguard_cac
 "
 
   def build_proguard_dependencies args
-    args = HashViaGet.new args
+    args = Hash[args]
 
     input_directories = args['classFiles']
     proguard_config_file = args['proguardProcessedConfFile']
@@ -126,7 +126,7 @@ Example: jruby -S rake -T -v proguard[proguard_android_scala.config,proguard_cac
     logger.logMsg("Proguard output file is " + destination_file)
     if File.exists?(destination_file)
       destination_jar = args[:destination_jar]
-      FileUtils.install destination_file, destination_jar, :mode => 0666, :verbose => true
+      FileUtils.install destination_file, destination_jar, :mode => 0666, :verbose => false
       logger.logMsg("installed #{destination_file} to #{destination_jar}")
     else
       logger.logError("No proguard output found at " + destination_file)
@@ -140,13 +140,19 @@ Example: jruby -S rake -T -v proguard[proguard_android_scala.config,proguard_cac
       defaults = args['proguardDefaults']
       scala_library_jar = args['scalaLibraryJar']
       f.puts "# scala-library.jar was calculated from the classpath"
-      f.puts %Q[-injars "#{scala_library_jar}"(!META-INF/MANIFEST.MF,!library.properties)\n]
+      f.puts %Q[-injars "#{scala_library_jar}"(!META-INF/MANIFEST.MF)\n]
       f.puts "\n# The CKSUM string is significant - it will be replaced with an actual checksum"
       f.puts %Q[-outjar "#{args['cachedJar']}"]
       args['classFiles'].each do |classfile|
         f.puts %Q[-injar "#{classfile}"]
       end
-      
+
+      android_lib_jar = args['androidLibraryJar']
+      if android_lib_jar
+        f.puts "\n# Android library calculated from classpath"
+        f.puts %Q(-libraryjars "#{args['androidLibraryJar']}")
+      end
+
       f.puts "\n# Builtin defaults"
       f.write defaults
       f.puts "\n# Inserting file #{args['proguardAdditionsFile']} - possibly empty"
@@ -156,21 +162,41 @@ Example: jruby -S rake -T -v proguard[proguard_android_scala.config,proguard_cac
       end
       f.flush
       conf_file = args['proguardProcessedConfFile']
-      FileUtils.install f.path, conf_file, :mode => 0666, :verbose => true
+      FileUtils.install f.path, conf_file, :mode => 0666, :verbose => false
       args['logger'].logMsg("Created new proguard configuration at #{conf_file}")
     end
   end
 
   def build_dependency_files_and_final_jar args
     require 'hash_via_get'
-    args = HashViaGet.new args
+    args = Hash[args]
     logger = args['logger']
+    setup_external_variables args
+    update_and_load_additional_libs_ruby_file args
+    args['classFiles'] = args['classFiles'] + ($ADDITIONAL_LIBS || [])
     args['classFiles'].each do |i|
       raise "non-existant input directory: " + i.to_s unless File.exists? i.to_s
       puts "input directory: #{i}"
     end
     build_proguard_file args
     result = build_proguard_dependencies args
-    run_proguard result.merge('logger' => args['logger'])
+    run_proguard result.merge('logger' => logger)
+  end
+
+  def update_and_load_additional_libs_ruby_file args
+    additional_file = args['confDir'] + "/additional_libs.rb"
+    if !File.exists? additional_file
+      File.open(additional_file, "w") do |f|
+        f.write "# Auto-generated sample file. "
+        f.write "# $WORKSPACE_DIR is set to the path for the current workspace"
+        f.write %Q{$ADDITIONAL_LIBS = [$WORKSPACE_DIR + "/TestAndroidLibrary/bin/testandroidlibrary.jar"]}
+      end
+    end
+    load additional_file
+  end
+
+  def setup_external_variables args
+    $WORKSPACE_DIR = args['workspaceDir']
+    $ADDITIONAL_LIBS = []
   end
 end
