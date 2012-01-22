@@ -188,7 +188,7 @@ public class ProguardCacheRuby extends RubyObject  {
             "    logger = args['logger']\n" +
             "    setup_external_variables args\n" +
             "    update_and_load_additional_libs_ruby_file args\n" +
-            "    args['classFiles'] = args['classFiles'] + ($ADDITIONAL_LIBS || [])\n" +
+            "    args['classFiles'] = (args['classFiles'] + ($ADDITIONAL_LIBS || [])).sort.uniq\n" +
             "    args['classFiles'].each do |i|\n" +
             "      raise \"non-existant input directory: \" + i.to_s unless File.exists? i.to_s\n" +
             "      puts \"input directory: #{i}\"\n" +

@@ -173,7 +173,7 @@ Example: jruby -S rake -T -v proguard[proguard_android_scala.config,proguard_cac
     logger = args['logger']
     setup_external_variables args
     update_and_load_additional_libs_ruby_file args
-    args['classFiles'] = args['classFiles'] + ($ADDITIONAL_LIBS || [])
+    args['classFiles'] = (args['classFiles'] + ($ADDITIONAL_LIBS || [])).sort.uniq
     args['classFiles'].each do |i|
       raise "non-existant input directory: " + i.to_s unless File.exists? i.to_s
       puts "input directory: #{i}"
