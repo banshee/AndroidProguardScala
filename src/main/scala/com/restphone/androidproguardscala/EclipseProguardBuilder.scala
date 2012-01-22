@@ -9,6 +9,7 @@ import org.eclipse.core.runtime.FileLocator
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.runtime.Platform
+import org.eclipse.core.resources.IResourceDelta
 import org.jruby.Ruby
 import org.objectweb.asm.Type
 import org.osgi.framework.BundleContext
@@ -60,7 +61,7 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
 
     // Using asJavaMap because JRuby has magic that adds many Ruby Hash methods to 
     // Java Map objects.
-    val parameters = asJavaMap(Map(
+    val parameters = Map(
       "cacheDir" -> cacheDirectory.getAbsolutePath,
       "confDir" -> confDirectory.getAbsolutePath,
       "workspaceDir" -> rootDirectoryOfWorkspace.getAbsolutePath,
@@ -72,10 +73,12 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
       "outputJar" -> outputJar.getAbsolutePath,
       "scalaLibraryJar" -> pathToScalaLibraryJar,
       "androidLibraryJar" -> pathToAndroidJar,
-      "logger" -> logger()))
+      "logger" -> logger())
+
+    logMsg("Build parameters are: " + parameters)
 
     if (buildRequired)
-      rubyCacheController.build_dependency_files_and_final_jar(parameters)
+      rubyCacheController.build_dependency_files_and_final_jar(asJavaMap(parameters))
 
     Array.empty
   }
