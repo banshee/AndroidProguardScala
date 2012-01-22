@@ -187,9 +187,9 @@ Example: jruby -S rake -T -v proguard[proguard_android_scala.config,proguard_cac
     additional_file = args['confDir'] + "/additional_libs.rb"
     if !File.exists? additional_file
       File.open(additional_file, "w") do |f|
-        f.write "# Auto-generated sample file. "
-        f.write "# $WORKSPACE_DIR is set to the path for the current workspace"
-        f.write %Q{$ADDITIONAL_LIBS = [$WORKSPACE_DIR + "/TestAndroidLibrary/bin/testandroidlibrary.jar"]}
+        f.puts "# Auto-generated sample file. "
+        f.puts "# $WORKSPACE_DIR is set to the path for the current workspace"
+        f.puts %Q{# $ADDITIONAL_LIBS = [$WORKSPACE_DIR + "/TestAndroidLibrary/bin/testandroidlibrary.jar"]}
       end
     end
     load additional_file

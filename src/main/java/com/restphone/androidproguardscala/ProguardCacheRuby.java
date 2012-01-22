@@ -202,9 +202,9 @@ public class ProguardCacheRuby extends RubyObject  {
             "    additional_file = args['confDir'] + \"/additional_libs.rb\"\n" +
             "    if !File.exists? additional_file\n" +
             "      File.open(additional_file, \"w\") do |f|\n" +
-            "        f.write \"# Auto-generated sample file. \"\n" +
-            "        f.write \"# $WORKSPACE_DIR is set to the path for the current workspace\"\n" +
-            "        f.write %Q{$ADDITIONAL_LIBS = [$WORKSPACE_DIR + \"/TestAndroidLibrary/bin/testandroidlibrary.jar\"]}\n" +
+            "        f.puts \"# Auto-generated sample file. \"\n" +
+            "        f.puts \"# $WORKSPACE_DIR is set to the path for the current workspace\"\n" +
+            "        f.puts %Q{# $ADDITIONAL_LIBS = [$WORKSPACE_DIR + \"/TestAndroidLibrary/bin/testandroidlibrary.jar\"]}\n" +
             "      end\n" +
             "    end\n" +
             "    load additional_file\n" +
