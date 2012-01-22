@@ -18,6 +18,7 @@ import org.eclipse.jdt.internal.core.JavaProject
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.IStatus
+import org.eclipse.core.resources.IResourceDelta
 
 trait ProvidesLogging {
   def logMsg(msg: String)
@@ -28,12 +29,14 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   import RichFile._
 
   def pathIsBuildArtifact(p: IPath) = p.lastSegment.indexOf("proguard_") == 0
-  
-  override def build(kind: Int, args: java.util.Map[String, String], monitor: IProgressMonitor): Array[IProject] = {
-    val d = getDelta(getProject)
-    val affected_paths = d.getAffectedChildren map {_.getFullPath}
+
+  override def build(kind: Int, args: java.util.Map[_, _], monitor: IProgressMonitor): Array[IProject] = {
+    val affected_paths = getDelta(getProject) match {
+      case x: IResourceDelta => x.getAffectedChildren map { _.getFullPath }
+      case null => Array.empty[IPath]
+    }
     val buildRequired = !(affected_paths filterNot pathIsBuildArtifact isEmpty)
-    
+
     logMsg(pluginId + " build is required: " + buildRequired)
 
     val scalaArgs = mapAsScalaMap(args.asInstanceOf[java.util.Map[String, String]])
