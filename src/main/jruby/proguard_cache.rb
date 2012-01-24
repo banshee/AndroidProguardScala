@@ -7,6 +7,7 @@ require 'digest/sha1'
 require 'proguardrunner'
 require 'pathname'
 require 'fileutils'
+require 'jvm_entity'
 
 java_package 'com.restphone.androidproguardscala'
 
@@ -15,21 +16,11 @@ class ProguardCacheRuby
     pattern.sub("CKSUM", checksum)
   end
 
-  # Given a list of directories, return a hash of
-  #   directory_name_checksum => [class and jar files relative to the directory]
-  def binary_file_directories_to_cache_files dir_list
-    dir_list.inject({}) do |memo, obj|
-      dir_identifier = Digest::SHA1.hexdigest obj.gsub("/", "_")
-      memo.merge dir_identifier => binary_file_directory_to_cache_files(obj)
-    end
-  end
-
   # Given a directory, return a list of relative pathnames as strings
-  # that are the .class and .jar files
-  def binary_file_directory_to_cache_files dir
+  # that are the .class  files
+  def classfiles_relative_to_directory dir
     result = Dir.glob(dir + "/**/*.class")
-    result = result + Dir.glob(dir + "/**/*.jar")
-    d = Pathname.new dir
+    d = dir.to_pathname
     result.map {|f| Pathname.new f}.map {|f| f.relative_path_from d}.map(&:to_s)
   end
 
@@ -48,29 +39,49 @@ class ProguardCacheRuby
     Digest::SHA1.hexdigest file_contents
   end
 
-  def build_dependencies_for_file dependency_file, binary_file
-    FileUtils.mkdir_p dependency_file.dirname
+  def build_dependencies_for_file dependency_directory, binary_file, forced_location = nil
+    FileUtils.mkdir_p dependency_directory.dirname
     dependencies = AsmSupport::AsmVisitorHarness.build_for_filename(AsmSupport::DependencySignatureVisitor, binary_file.to_s)
-    File.open(dependency_file, "w") do |f|
-      f.write dependencies.values.first.keys.sort.uniq.join("\n")
+    dependencies.keys.each do |classname|
+      dep_path = if forced_location
+        forced_location
+      else
+        Pathname.new((dependency_directory + classname).to_s + ".class.proto_depend")
+      end
+      FileUtils.mkdir_p dep_path.dirname
+      File.open(dep_path, "w") do |f|
+        f.write dependencies[classname].keys.sort.uniq.join("\n")
+      end
     end
   end
 
-  def build_dependency_files input_directories, cache_dir
+  def build_dependency_files input_items, cache_dir
     cache_dir_pathname = Pathname.new cache_dir
     FileUtils.mkdir_p cache_dir
     result = []
-    input_directories.each do |d|
-      dir_identifier = Digest::SHA1.hexdigest d.gsub("/", "_")
-      bin_files = binary_file_directory_to_cache_files d
-      bin_files.each do |bf|
-        full_pathname_for_binary_file = Pathname.new(d) + bf
-        full_pathname_for_dependency_file = cache_dir_pathname + dir_identifier + (bf.to_s + ".proto_depend")
+    input_items.each do |d|
+      dir_identifier = d.checksum
+      cache_directory_with_checksum = cache_dir_pathname + dir_identifier
+      case d
+      when ClassDirectory
+        classfiles = classfiles_relative_to_directory d
+        classfiles.each do |cf|
+          full_pathname_for_binary_file = d.to_pathname + cf
+          full_pathname_for_dependency_file = cache_dir_pathname + dir_identifier + (cf.to_s + ".proto_depend")
+          is_current = FileUtils.uptodate? full_pathname_for_dependency_file, [full_pathname_for_binary_file]
+          if !is_current
+            x = build_dependencies_for_file cache_directory_with_checksum, full_pathname_for_binary_file, full_pathname_for_dependency_file
+          end
+          result << full_pathname_for_dependency_file
+        end
+      when JarFile
+        full_pathname_for_binary_file = d.to_pathname
+        full_pathname_for_dependency_file = cache_dir_pathname + dir_identifier + (d.basename.to_s + ".class.proto_depend")
         is_current = FileUtils.uptodate? full_pathname_for_dependency_file, [full_pathname_for_binary_file]
         if !is_current
-          build_dependencies_for_file full_pathname_for_dependency_file, full_pathname_for_binary_file
+          x = build_dependencies_for_file cache_directory_with_checksum, full_pathname_for_binary_file
+          result = result + x.map {|result_file| cache_directory_with_checksum + (result_file + ".class.proto_depend")}
         end
-        result << full_pathname_for_dependency_file
       end
     end
     result
@@ -88,7 +99,7 @@ Example: jruby -S rake -T -v proguard[proguard_android_scala.config,proguard_cac
   def build_proguard_dependencies args
     args = Hash[args]
 
-    input_directories = args['classFiles']
+    input_entities = args['classFiles']
     proguard_config_file = args['proguardProcessedConfFile']
     destination_jar = args['outputJar']
     cache_dir = args['cacheDir']
@@ -98,7 +109,7 @@ Example: jruby -S rake -T -v proguard[proguard_android_scala.config,proguard_cac
     destination_jar or raise "You must specify a destination jar"
     cache_dir ||= "proguard_cache"
 
-    proguard_dependency_files = build_dependency_files input_directories, cache_dir
+    proguard_dependency_files = build_dependency_files input_entities, cache_dir
 
     dependency_checksum = checksum_of_lines_in_files(proguard_dependency_files + [proguard_config_file])
 
@@ -119,6 +130,7 @@ Example: jruby -S rake -T -v proguard[proguard_android_scala.config,proguard_cac
     destination_file = args[:proguard_destination_file]
     logger = args['logger']
     config_file = args[:proguard_config_file]
+    logger.logMsg("about to run proguard")
     if !File.exists?(destination_file)
       logger.logMsg("Running proguard with config file " + config_file)
       ProguardRunner.execute_proguard(:config_file => config_file, :cksum => ".#{args[:dependency_checksum]}")
@@ -168,16 +180,16 @@ Example: jruby -S rake -T -v proguard[proguard_android_scala.config,proguard_cac
   end
 
   def build_dependency_files_and_final_jar args
-    require 'hash_via_get'
     args = Hash[args]
     logger = args['logger']
     setup_external_variables args
     update_and_load_additional_libs_ruby_file args
-    args['classFiles'] = args['classFiles'] + ($ADDITIONAL_LIBS || [])
+    args['classFiles'] = (args['classFiles'] + ($ADDITIONAL_LIBS || [])).sort.uniq
     args['classFiles'].each do |i|
       raise "non-existant input directory: " + i.to_s unless File.exists? i.to_s
       puts "input directory: #{i}"
     end
+    args['classFiles'] = args['classFiles'].map {|f| JvmEntityBuilder.create f}
     build_proguard_file args
     result = build_proguard_dependencies args
     run_proguard result.merge('logger' => logger)
@@ -187,9 +199,9 @@ Example: jruby -S rake -T -v proguard[proguard_android_scala.config,proguard_cac
     additional_file = args['confDir'] + "/additional_libs.rb"
     if !File.exists? additional_file
       File.open(additional_file, "w") do |f|
-        f.write "# Auto-generated sample file. "
-        f.write "# $WORKSPACE_DIR is set to the path for the current workspace"
-        f.write %Q{$ADDITIONAL_LIBS = [$WORKSPACE_DIR + "/TestAndroidLibrary/bin/testandroidlibrary.jar"]}
+        f.puts "# Auto-generated sample file. "
+        f.puts "# $WORKSPACE_DIR is set to the path for the current workspace"
+        f.puts %Q{# $ADDITIONAL_LIBS = [$WORKSPACE_DIR + "/TestAndroidLibrary/bin/testandroidlibrary.jar"]}
       end
     end
     load additional_file
@@ -197,6 +209,9 @@ Example: jruby -S rake -T -v proguard[proguard_android_scala.config,proguard_cac
 
   def setup_external_variables args
     $WORKSPACE_DIR = args['workspaceDir']
+    $PROJECT_DIR = args['projectDir']
+    $BUILDER_ARGS = args
     $ADDITIONAL_LIBS = []
+    puts "globals now set"
   end
 end

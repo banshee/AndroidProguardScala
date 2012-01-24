@@ -40,10 +40,26 @@ module AsmSupport
       build visitor, inputstream
       visitor.get_result
     end
-    
+
     def self.build_for_filename klass, filename
+      require 'pp'
+      pp "kasdf", klass, filename
+
       o = AsmVisitorHarness.new klass
-      o.build_for_filename filename
+      case filename
+      when /\.class$/
+        o.build_for_filename filename
+      when /\.jar$/
+        result = {}
+        jarfile = java.util.jar.JarFile.new filename
+        jarfile.entries.each do |e|
+          if e.to_s =~ /\.class$/
+            new_data = (o.build_for_jar_entry jarfile, e)
+            result.merge! new_data
+          end
+        end
+        result
+      end
     end
   end
 end
