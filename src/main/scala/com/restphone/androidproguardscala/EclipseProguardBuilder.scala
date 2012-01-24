@@ -1,4 +1,5 @@
 package com.restphone.androidproguardscala
+import scala.PartialFunction._
 import java.io.File
 import scala.collection.JavaConversions.mapAsScalaMap
 import scala.collection.JavaConversions.seqAsJavaList
@@ -30,15 +31,18 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   import RichFile._
 
   def pathIsBuildArtifact(p: IPath) = p.lastSegment.indexOf("proguard_") == 0
+  val streamContainsOnlyBuildArtifacts: PartialFunction[Stream[IPath], Boolean] = {
+    case h #:: Stream.Empty if (pathIsBuildArtifact(h)) => true
+  }
 
-  override def build(kind: Int, args: java.util.Map[_, _], monitor: IProgressMonitor): Array[IProject] = {
+  override def build(kind: Int, args: java.util.Map[String, String], monitor: IProgressMonitor): Array[IProject] = {
     val affected_paths = getDelta(getProject) match {
       case x: IResourceDelta => x.getAffectedChildren map { _.getFullPath }
       case null => Array.empty[IPath]
     }
-    val buildRequired = !(affected_paths filterNot pathIsBuildArtifact isEmpty)
+    val buildRequired = !cond(affected_paths.toStream)(streamContainsOnlyBuildArtifacts)
 
-    logMsg(pluginId + " build is required: " + buildRequired)
+    logMsg("build is required: " + buildRequired)
 
     val scalaArgs = mapAsScalaMap(args.asInstanceOf[java.util.Map[String, String]])
 
@@ -59,29 +63,42 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
 
     import scala.collection.JavaConversions.asJavaMap
 
-    // Using asJavaMap because JRuby has magic that adds many Ruby Hash methods to 
-    // Java Map objects.
-    val parameters = Map(
-      "cacheDir" -> cacheDirectory.getAbsolutePath,
-      "confDir" -> confDirectory.getAbsolutePath,
-      "workspaceDir" -> rootDirectoryOfWorkspace.getAbsolutePath,
-      "classFiles" -> (outputFoldersFiles map objToString toArray),
-      "proguardDefaults" -> proguardDefaults,
-      "proguardAdditionsFile" -> proguardAdditionsFile.getAbsolutePath,
-      "proguardProcessedConfFile" -> proguardProcessedConfFile.getAbsolutePath,
-      "cachedJar" -> cachedJar.getAbsolutePath,
-      "outputJar" -> outputJar.getAbsolutePath,
-      "scalaLibraryJar" -> pathToScalaLibraryJar,
-      "androidLibraryJar" -> pathToAndroidJar,
-      "logger" -> logger())
+    val parameters = {
+      val fileParameters = {
+        val javaFileParameters: Map[String, File] = Map(
+          "cacheDir" -> cacheDirectory,
+          "confDir" -> confDirectory,
+          "workspaceDir" -> rootDirectoryOfWorkspace,
+          "projectDir" -> rootDirectoryOfProject,
+          "proguardAdditionsFile" -> proguardAdditionsFile,
+          "proguardProcessedConfFile" -> proguardProcessedConfFile,
+          "cachedJar" -> cachedJar,
+          "outputJar" -> outputJar,
+          "scalaLibraryJar" -> scalaLibraryJar,
+          "androidLibraryJar" -> pathToAndroidJar.toFile)
+        javaFileParameters mapValues toRubyFile
+      }
+
+      val otherParameters = Map(
+        "classFiles" -> (outputFoldersFiles map toRubyFile toArray),
+        "proguardDefaults" -> proguardDefaults,
+        "logger" -> logger())
+
+      fileParameters ++ otherParameters
+    }
 
     logMsg("Build parameters are: " + parameters)
 
-    if (buildRequired)
+    if (buildRequired) {
+      // Using asJavaMap because JRuby has magic that adds many Ruby Hash methods to 
+      // Java Map objects.
       rubyCacheController.build_dependency_files_and_final_jar(asJavaMap(parameters))
+    }
 
     Array.empty
   }
+
+  def toRubyFile(f: File) = f.toString.replace('\\', '/')
 
   val outerThis = this
 
@@ -95,9 +112,9 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   val lastSegmentIsAndroidLibrary = lastSegmentIsString("android.jar")
   val fileExists = (p: IPath) => p.toFile.exists
 
-  def pathToScalaLibraryJar = {
+  def scalaLibraryJar = {
     val entry = getResolvedClasspathEntries filter lastSegmentIsScalaLibrary find fileExists
-    entry getOrElse null
+    entry map { f => new java.io.File(f.toString) } getOrElse null
   }
 
   def pathToAndroidJar = {
@@ -223,6 +240,7 @@ class RichFile(f: File) {
 object RichFile {
   implicit def toRichFile(f: File): RichFile = new RichFile(f)
   implicit def fileToPath(f: File): IPath = Path.fromOSString(f.toString)
+  implicit def pathToFile(p: IPath): File = p.toFile
   def toFilenameAsString(f: File) = f.toString
   def stringToFile(f: String) = new File(f)
   def ipathToFile(p: IPath) = p.toFile
