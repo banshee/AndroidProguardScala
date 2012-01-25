@@ -30,7 +30,7 @@ module AsmSupport
       #      String[] interfaces);
       name = args[2]
       @current_class = name
-      depends_on :visitAsClass, *args
+      depends_on :visitAsClass, *(args[3..-1])
     end
 
     def method_missing name, *args
