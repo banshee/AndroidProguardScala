@@ -166,12 +166,10 @@ public class ProguardCacheRuby extends RubyObject  {
             "    destination_file = args[:proguard_destination_file]\n" +
             "    logger = args['logger']\n" +
             "    config_file = args[:proguard_config_file]\n" +
-            "    logger.logMsg(\"about to run proguard\")\n" +
             "    if !File.exists?(destination_file)\n" +
             "      logger.logMsg(\"Running proguard with config file \" + config_file)\n" +
             "      ProguardRunner.execute_proguard(:config_file => config_file, :cksum => \".#{args[:dependency_checksum]}\")\n" +
             "    end\n" +
-            "    logger.logMsg(\"Proguard output file is \" + destination_file)\n" +
             "    if File.exists?(destination_file)\n" +
             "      destination_jar = args[:destination_jar]\n" +
             "      FileUtils.install destination_file, destination_jar, :mode => 0666, :verbose => false\n" +
@@ -267,7 +265,6 @@ public class ProguardCacheRuby extends RubyObject  {
             "    $PROJECT_DIR = args['projectDir']\n" +
             "    $BUILDER_ARGS = args\n" +
             "    $ADDITIONAL_LIBS = []\n" +
-            "    puts \"globals now set\"\n" +
             "  end\n" +
             "end\n" +
             "").toString();

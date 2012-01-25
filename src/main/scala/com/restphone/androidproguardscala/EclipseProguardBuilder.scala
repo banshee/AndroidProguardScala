@@ -48,10 +48,6 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
 
     val proguardDefaults = slurp(pathToFileRelativeToPluginBundle(new Path("proguard_cache_conf/proguard_defaults.conf")))
 
-    val cacheDirectory = rootDirectoryOfProject / "proguard_cache"
-    val confDirectory = rootDirectoryOfProject / "proguard_cache_conf"
-    val libDirectory = rootDirectoryOfProject / "lib"
-
     Seq(cacheDirectory, confDirectory, libDirectory) foreach ensureDirExists
 
     val proguardProcessedConfFile = confDirectory / "proguard_postprocessed.conf"
@@ -97,6 +93,15 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
 
     Array.empty
   }
+
+  override def clean(monitor: IProgressMonitor): Unit = {
+    rubyCacheController.clean_cache(toRubyFile(cacheDirectory))
+  }
+
+  lazy val rootDirectoryOfProject = ipathToFile(getProject.getLocation)
+  lazy val cacheDirectory = rootDirectoryOfProject / "proguard_cache"
+  lazy val confDirectory = rootDirectoryOfProject / "proguard_cache_conf"
+  lazy val libDirectory = rootDirectoryOfProject / "lib"
 
   def toRubyFile(f: File) = f.toString.replace('\\', '/')
 
@@ -149,7 +154,6 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   def outputFolders: Seq[IPath] = scalaProject outputFolders
   def outputFoldersFiles = outputFolders map ipathToFile map { f => rootDirectoryOfWorkspace / f.toString }
 
-  def rootDirectoryOfProject = ipathToFile(getProject.getLocation)
 
   def rootDirectoryOfWorkspace = {
     ipathToFile(ResourcesPlugin.getWorkspace.getRoot.getLocation)

@@ -151,12 +151,10 @@ Example: jruby -S rake -T -v proguard[proguard_android_scala.config,proguard_cac
     destination_file = args[:proguard_destination_file]
     logger = args['logger']
     config_file = args[:proguard_config_file]
-    logger.logMsg("about to run proguard")
     if !File.exists?(destination_file)
       logger.logMsg("Running proguard with config file " + config_file)
       ProguardRunner.execute_proguard(:config_file => config_file, :cksum => ".#{args[:dependency_checksum]}")
     end
-    logger.logMsg("Proguard output file is " + destination_file)
     if File.exists?(destination_file)
       destination_jar = args[:destination_jar]
       FileUtils.install destination_file, destination_jar, :mode => 0666, :verbose => false
