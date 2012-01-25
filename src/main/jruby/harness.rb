@@ -16,7 +16,7 @@ end
 
 p = ProguardCacheRuby.new
 p.build_dependency_files_and_final_jar "classFiles" =>  input_directories,
-"proguardDefaults" => "some defaults go here\n",
+"proguardDefaults" => "# some defaults go here\n-ignorewarnings\n-libraryjars /Users/james/src/android/prebuilt/sdk/9/android.jar",
 "proguardAdditionsFile" => base + '/proguard_cache/proguard_additions.conf',
 "proguardProcessedConfFile" => base + '/proguard_cache/proguard.conf',
 "workspaceDir" => "/Users/james/runtime-EclipseApplicationwithEquinoxWeaving",
@@ -25,7 +25,7 @@ p.build_dependency_files_and_final_jar "classFiles" =>  input_directories,
 "confDir" => base + "/proguard_cache_conf",
 'logger' => Lgr.new,
 "cacheDir" => base + "/proguard_cache",
-"scalaLibraryJar" => '/Users/james/src/scala-ide/org.scala-ide.sdt.core.tests/test-workspace/classpath/lib/2.9.x/scala-library.jar'
+"scalaLibraryJar" => '/Users/james/lib/scala-2.9.1.final/lib/scala-library.jar'
 
 #cacheDir => " /Users/james/runtime-EclipseApplicationwithEquinoxWeaving/AndroidTest/proguard_cache"
 #proguardProcessedConfFile => " /Users/james/runtime-EclipseApplicationwithEquinoxWeaving/AndroidTest/proguard_cache_conf/proguard_postprocessed.conf
