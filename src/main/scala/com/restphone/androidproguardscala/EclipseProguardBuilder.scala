@@ -44,72 +44,74 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
 
     logMsg("build is required: " + buildRequired)
 
-    val scalaArgs = mapAsScalaMap(args.asInstanceOf[java.util.Map[String, String]])
+    if (buildRequired) {
+      val scalaArgs = mapAsScalaMap(args.asInstanceOf[java.util.Map[String, String]])
 
-    val proguardDefaults = slurp(pathToFileRelativeToPluginBundle(new Path("proguard_cache_conf/proguard_defaults.conf")))
+      val proguardDefaults = slurp(pathToFileRelativeToPluginBundle(new Path("proguard_cache_conf/proguard_defaults.conf")))
 
-    Seq(cacheDirectory, confDirectory, libDirectory) foreach ensureDirExists
+      Seq(cacheDirectory, confDirectory, libDirectory) foreach ensureDirExists
 
-    val proguardProcessedConfFile = confDirectory / "proguard_postprocessed.conf"
-    val proguardAdditionsFile = confDirectory / "proguard_additions.conf"
+      val proguardProcessedConfFile = confDirectory / "proguard_postprocessed.conf"
+      val proguardAdditionsFile = confDirectory / "proguard_additions.conf"
 
-    val cachedJar = cacheDirectory / "scala-library.CKSUM.jar"
+      val cachedJar = cacheDirectory / "scala-library.CKSUM.jar"
 
-    val outputJar = rootDirectoryOfProject / "lib" / "scala_library.min.jar"
+      val outputJar = rootDirectoryOfProject / "lib" / "scala_library.min.jar"
 
-    import scala.collection.JavaConversions.asJavaMap
+      import scala.collection.JavaConversions.asJavaMap
 
-    val parameters = {
-      val fileParameters = {
-        val javaFileParameters: Map[String, File] = Map(
-          "cacheDir" -> cacheDirectory,
-          "confDir" -> confDirectory,
-          "workspaceDir" -> rootDirectoryOfWorkspace,
-          "projectDir" -> rootDirectoryOfProject,
-          "proguardAdditionsFile" -> proguardAdditionsFile,
-          "proguardProcessedConfFile" -> proguardProcessedConfFile,
-          "cachedJar" -> cachedJar,
-          "outputJar" -> outputJar,
-          "scalaLibraryJar" -> scalaLibraryJar,
-          "androidLibraryJar" -> pathToAndroidJar.toFile)
-        javaFileParameters mapValues toRubyFile
+      val parameters = {
+        val fileParameters = {
+          val javaFileParameters: Map[String, File] = Map(
+            "cacheDir" -> cacheDirectory,
+            "confDir" -> confDirectory,
+            "workspaceDir" -> rootDirectoryOfWorkspace,
+            "projectDir" -> rootDirectoryOfProject,
+            "proguardAdditionsFile" -> proguardAdditionsFile,
+            "proguardProcessedConfFile" -> proguardProcessedConfFile,
+            "cachedJar" -> cachedJar,
+            "outputJar" -> outputJar,
+            "scalaLibraryJar" -> scalaLibraryJar,
+            "androidLibraryJar" -> pathToAndroidJar.toFile)
+          javaFileParameters mapValues toRubyFile
+        }
+
+        val otherParameters = Map(
+          "classFiles" -> (outputFoldersFiles map toRubyFile toArray),
+          "proguardDefaults" -> proguardDefaults,
+          "logger" -> logger())
+
+        fileParameters ++ otherParameters
       }
 
-      val otherParameters = Map(
-        "classFiles" -> (outputFoldersFiles map toRubyFile toArray),
-        "proguardDefaults" -> proguardDefaults,
-        "logger" -> logger())
+      logMsg("Build parameters are: " + parameters)
 
-      fileParameters ++ otherParameters
-    }
-
-    logMsg("Build parameters are: " + parameters)
-
-    if (buildRequired) {
-      // Using asJavaMap because JRuby has magic that adds many Ruby Hash methods to 
-      // Java Map objects.
-      rubyCacheController.build_dependency_files_and_final_jar(asJavaMap(parameters))
+      if (buildRequired) {
+        // Using asJavaMap because JRuby has magic that adds many Ruby Hash methods to 
+        // Java Map objects.
+        rubyCacheController.build_dependency_files_and_final_jar(asJavaMap(parameters))
+      }
     }
 
     Array.empty
   }
 
-  override def clean(monitor: IProgressMonitor): Unit = {
-    rubyCacheController.clean_cache(toRubyFile(cacheDirectory))
-  }
+  override def clean(monitor: IProgressMonitor): Unit = rubyCacheController.clean_cache(toRubyFile(cacheDirectory))
 
   lazy val rootDirectoryOfProject = ipathToFile(getProject.getLocation)
   lazy val cacheDirectory = rootDirectoryOfProject / "proguard_cache"
   lazy val confDirectory = rootDirectoryOfProject / "proguard_cache_conf"
   lazy val libDirectory = rootDirectoryOfProject / "lib"
+  lazy val scalaProject = scala.tools.eclipse.ScalaProject(getProject)
+
+  def outputFolders: Seq[IPath] = scalaProject outputFolders
+  def outputFoldersFiles = outputFolders map ipathToFile map { f => rootDirectoryOfWorkspace / f.toString }
 
   def toRubyFile(f: File) = f.toString.replace('\\', '/')
 
-  val outerThis = this
-
   def logger() = new ProvidesLogging {
-    def logMsg(msg: String) = outerThis.logMsg(msg)
-    def logError(msg: String) = outerThis.logMsg(msg, IStatus.ERROR)
+    def logMsg(msg: String) = AndroidProguardScalaBuilder.this.logMsg(msg)
+    def logError(msg: String) = AndroidProguardScalaBuilder.this.logMsg(msg, IStatus.ERROR)
   }
 
   val lastSegmentIsString = (s: String) => (p: IPath) => p.lastSegment.equals(s)
@@ -145,15 +147,7 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
     new ProguardCacheRuby
   }
 
-  //  def relativeToRoot(newItem: String) = rootDirectoryOfProject / newItem
-
-  def scalaProject = scala.tools.eclipse.ScalaProject(getProject)
-
   def objToString[T](x: T) = x.toString
-
-  def outputFolders: Seq[IPath] = scalaProject outputFolders
-  def outputFoldersFiles = outputFolders map ipathToFile map { f => rootDirectoryOfWorkspace / f.toString }
-
 
   def rootDirectoryOfWorkspace = {
     ipathToFile(ResourcesPlugin.getWorkspace.getRoot.getLocation)
