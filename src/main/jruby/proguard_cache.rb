@@ -42,7 +42,8 @@ class ProguardCacheRuby
   def build_dependencies_for_file dependency_directory, binary_file, forced_location = nil
     FileUtils.mkdir_p dependency_directory.dirname
     dependencies = AsmSupport::AsmVisitorHarness.build_for_filename(AsmSupport::DependencySignatureVisitor, binary_file.to_s)
-    dependencies.keys.each do |classname|
+    classnames = dependencies.keys
+    classnames.each do |classname|
       dep_path = if forced_location
         forced_location
       else
@@ -50,9 +51,29 @@ class ProguardCacheRuby
       end
       FileUtils.mkdir_p dep_path.dirname
       File.open(dep_path, "w") do |f|
+        f.puts "classname: #{classname}"
         f.write dependencies[classname].keys.sort.uniq.join("\n")
       end
     end
+    classnames
+  end
+
+  def calculate_classnames_in_cache_dir cache_dir
+    filenames = Dir.glob(cache_dir.to_s + "/**/*.proto_depend")
+    classnames = filenames.map do |filename|
+      result = []
+      File.open(filename) do |f|
+        f.each_line do |l|
+          l.strip!
+          label, classname = l.split(": ")
+          if label == "classname"
+            result << (classname.split('/').join('.'))
+          end
+        end
+      end
+      result
+    end
+    classnames.flatten.sort.uniq
   end
 
   def build_dependency_files input_items, cache_dir
@@ -70,7 +91,7 @@ class ProguardCacheRuby
           full_pathname_for_dependency_file = cache_dir_pathname + dir_identifier + (cf.to_s + ".proto_depend")
           is_current = FileUtils.uptodate? full_pathname_for_dependency_file, [full_pathname_for_binary_file]
           if !is_current
-            x = build_dependencies_for_file cache_directory_with_checksum, full_pathname_for_binary_file, full_pathname_for_dependency_file
+            build_dependencies_for_file cache_directory_with_checksum, full_pathname_for_binary_file, full_pathname_for_dependency_file
           end
           result << full_pathname_for_dependency_file
         end
@@ -79,8 +100,8 @@ class ProguardCacheRuby
         full_pathname_for_dependency_file = cache_dir_pathname + dir_identifier + (d.basename.to_s + ".class.proto_depend")
         is_current = FileUtils.uptodate? full_pathname_for_dependency_file, [full_pathname_for_binary_file]
         if !is_current
-          x = build_dependencies_for_file cache_directory_with_checksum, full_pathname_for_binary_file
-          result = result + x.map {|result_file| cache_directory_with_checksum + (result_file + ".class.proto_depend")}
+          classnames = build_dependencies_for_file cache_directory_with_checksum, full_pathname_for_binary_file
+          result = result + classnames.map {|result_file| cache_directory_with_checksum + (result_file + ".class.proto_depend")}
         end
       end
     end
@@ -111,7 +132,7 @@ Example: jruby -S rake -T -v proguard[proguard_android_scala.config,proguard_cac
 
     proguard_dependency_files = build_dependency_files input_entities, cache_dir
 
-    dependency_checksum = checksum_of_lines_in_files(proguard_dependency_files + [proguard_config_file])
+    dependency_checksum = checksum_of_lines_in_files(proguard_dependency_files)
 
     proguard_destination_file = proguard_output cached_jar, dependency_checksum
 
@@ -172,9 +193,16 @@ Example: jruby -S rake -T -v proguard[proguard_android_scala.config,proguard_cac
         additions_file = File.new args['proguardAdditionsFile']
         f.write additions_file.read
       end
+
+      f.puts "# Keep all non-scala classess"
+      args['classnames'].each do |classname|
+        f.puts "-keep class #{classname} {*;}"
+      end
       f.flush
+
       conf_file = args['proguardProcessedConfFile']
       FileUtils.install f.path, conf_file, :mode => 0666, :verbose => false
+
       args['logger'].logMsg("Created new proguard configuration at #{conf_file}")
     end
   end
@@ -190,8 +218,9 @@ Example: jruby -S rake -T -v proguard[proguard_android_scala.config,proguard_cac
       puts "input directory: #{i}"
     end
     args['classFiles'] = args['classFiles'].map {|f| JvmEntityBuilder.create f}
-    build_proguard_file args
     result = build_proguard_dependencies args
+    all_classnames = calculate_classnames_in_cache_dir args['cacheDir']
+    build_proguard_file(args.merge 'classnames' => all_classnames)
     run_proguard result.merge('logger' => logger)
   end
 
@@ -207,11 +236,21 @@ Example: jruby -S rake -T -v proguard[proguard_android_scala.config,proguard_cac
     load additional_file
   end
 
+  java_signature 'void clean_cache(String cacheDir)'
+
+  def clean_cache cache_dir
+    depend_files = Dir.glob(cache_dir.to_s + "/**/*.proto_depend")
+    jar_files = Dir.glob(cache_dir.to_s + "/**/*.jar")
+    dependency_lines = Dir.glob(cache_dir.to_s + "/**/dependency_lines*")
+    (depend_files + jar_files + dependency_lines).each do |f|
+      File.unlink f
+    end
+  end
+
   def setup_external_variables args
     $WORKSPACE_DIR = args['workspaceDir']
     $PROJECT_DIR = args['projectDir']
     $BUILDER_ARGS = args
     $ADDITIONAL_LIBS = []
-    puts "globals now set"
   end
 end
