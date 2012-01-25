@@ -2,7 +2,7 @@ require 'java'
 require 'pathname'
 require 'fileutils'
 
-java_package 'com.restphone.androidproguardscala'
+java_package 'com.restphone.androidproguardscala.jruby'
 
 class JvmEntity
   def initialize f

@@ -9,7 +9,7 @@ require 'pathname'
 require 'fileutils'
 require 'jvm_entity'
 
-java_package 'com.restphone.androidproguardscala'
+java_package 'com.restphone.androidproguardscala.jruby'
 
 class ProguardCacheRuby
   def proguard_output pattern, checksum
