@@ -1,6 +1,5 @@
 require 'java'
 require 'proguard_cache_requires'
-require 'pp'
 
 module AsmSupport
   # This lets me type org.objectweb.asm::... instead of Java::OrgObjectwebAsm::...
@@ -45,7 +44,6 @@ module AsmSupport
           return nil
         end
         @seen[name] = 1
-        #        pp "seenMethods: ", @seen
         return self
       end
       super

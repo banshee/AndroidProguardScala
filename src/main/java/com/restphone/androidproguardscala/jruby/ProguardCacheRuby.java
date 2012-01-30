@@ -1,4 +1,4 @@
-package com.restphone.androidproguardscala;
+package com.restphone.androidproguardscala.jruby;
 
 import org.jruby.Ruby;
 import org.jruby.RubyObject;
@@ -24,7 +24,7 @@ public class ProguardCacheRuby extends RubyObject  {
             "require 'fileutils'\n" +
             "require 'jvm_entity'\n" +
             "\n" +
-            "java_package 'com.restphone.androidproguardscala'\n" +
+            "java_package 'com.restphone.androidproguardscala.jruby'\n" +
             "\n" +
             "class ProguardCacheRuby\n" +
             "  def proguard_output pattern, checksum\n" +
@@ -57,7 +57,8 @@ public class ProguardCacheRuby extends RubyObject  {
             "  def build_dependencies_for_file dependency_directory, binary_file, forced_location = nil\n" +
             "    FileUtils.mkdir_p dependency_directory.dirname\n" +
             "    dependencies = AsmSupport::AsmVisitorHarness.build_for_filename(AsmSupport::DependencySignatureVisitor, binary_file.to_s)\n" +
-            "    dependencies.keys.each do |classname|\n" +
+            "    classnames = dependencies.keys\n" +
+            "    classnames.each do |classname|\n" +
             "      dep_path = if forced_location\n" +
             "        forced_location\n" +
             "      else\n" +
@@ -65,9 +66,29 @@ public class ProguardCacheRuby extends RubyObject  {
             "      end\n" +
             "      FileUtils.mkdir_p dep_path.dirname\n" +
             "      File.open(dep_path, \"w\") do |f|\n" +
+            "        f.puts \"classname: #{classname}\"\n" +
             "        f.write dependencies[classname].keys.sort.uniq.join(\"\\n\")\n" +
             "      end\n" +
             "    end\n" +
+            "    classnames\n" +
+            "  end\n" +
+            "\n" +
+            "  def calculate_classnames_in_cache_dir cache_dir\n" +
+            "    filenames = Dir.glob(cache_dir.to_s + \"/**/*.proto_depend\")\n" +
+            "    classnames = filenames.map do |filename|\n" +
+            "      result = []\n" +
+            "      File.open(filename) do |f|\n" +
+            "        f.each_line do |l|\n" +
+            "          l.strip!\n" +
+            "          label, classname = l.split(\": \")\n" +
+            "          if label == \"classname\"\n" +
+            "            result << (classname.split('/').join('.'))\n" +
+            "          end\n" +
+            "        end\n" +
+            "      end\n" +
+            "      result\n" +
+            "    end\n" +
+            "    classnames.flatten.sort.uniq\n" +
             "  end\n" +
             "\n" +
             "  def build_dependency_files input_items, cache_dir\n" +
@@ -85,7 +106,7 @@ public class ProguardCacheRuby extends RubyObject  {
             "          full_pathname_for_dependency_file = cache_dir_pathname + dir_identifier + (cf.to_s + \".proto_depend\")\n" +
             "          is_current = FileUtils.uptodate? full_pathname_for_dependency_file, [full_pathname_for_binary_file]\n" +
             "          if !is_current\n" +
-            "            x = build_dependencies_for_file cache_directory_with_checksum, full_pathname_for_binary_file, full_pathname_for_dependency_file\n" +
+            "            build_dependencies_for_file cache_directory_with_checksum, full_pathname_for_binary_file, full_pathname_for_dependency_file\n" +
             "          end\n" +
             "          result << full_pathname_for_dependency_file\n" +
             "        end\n" +
@@ -94,8 +115,8 @@ public class ProguardCacheRuby extends RubyObject  {
             "        full_pathname_for_dependency_file = cache_dir_pathname + dir_identifier + (d.basename.to_s + \".class.proto_depend\")\n" +
             "        is_current = FileUtils.uptodate? full_pathname_for_dependency_file, [full_pathname_for_binary_file]\n" +
             "        if !is_current\n" +
-            "          x = build_dependencies_for_file cache_directory_with_checksum, full_pathname_for_binary_file\n" +
-            "          result = result + x.map {|result_file| cache_directory_with_checksum + (result_file + \".class.proto_depend\")}\n" +
+            "          classnames = build_dependencies_for_file cache_directory_with_checksum, full_pathname_for_binary_file\n" +
+            "          result = result + classnames.map {|result_file| cache_directory_with_checksum + (result_file + \".class.proto_depend\")}\n" +
             "        end\n" +
             "      end\n" +
             "    end\n" +
@@ -126,7 +147,7 @@ public class ProguardCacheRuby extends RubyObject  {
             "\n" +
             "    proguard_dependency_files = build_dependency_files input_entities, cache_dir\n" +
             "\n" +
-            "    dependency_checksum = checksum_of_lines_in_files(proguard_dependency_files + [proguard_config_file])\n" +
+            "    dependency_checksum = checksum_of_lines_in_files(proguard_dependency_files)\n" +
             "\n" +
             "    proguard_destination_file = proguard_output cached_jar, dependency_checksum\n" +
             "\n" +
@@ -145,12 +166,10 @@ public class ProguardCacheRuby extends RubyObject  {
             "    destination_file = args[:proguard_destination_file]\n" +
             "    logger = args['logger']\n" +
             "    config_file = args[:proguard_config_file]\n" +
-            "    logger.logMsg(\"about to run proguard\")\n" +
             "    if !File.exists?(destination_file)\n" +
             "      logger.logMsg(\"Running proguard with config file \" + config_file)\n" +
             "      ProguardRunner.execute_proguard(:config_file => config_file, :cksum => \".#{args[:dependency_checksum]}\")\n" +
             "    end\n" +
-            "    logger.logMsg(\"Proguard output file is \" + destination_file)\n" +
             "    if File.exists?(destination_file)\n" +
             "      destination_jar = args[:destination_jar]\n" +
             "      FileUtils.install destination_file, destination_jar, :mode => 0666, :verbose => false\n" +
@@ -187,9 +206,16 @@ public class ProguardCacheRuby extends RubyObject  {
             "        additions_file = File.new args['proguardAdditionsFile']\n" +
             "        f.write additions_file.read\n" +
             "      end\n" +
+            "\n" +
+            "      f.puts \"# Keep all non-scala classess\"\n" +
+            "      args['classnames'].each do |classname|\n" +
+            "        f.puts \"-keep class #{classname} {*;}\"\n" +
+            "      end\n" +
             "      f.flush\n" +
+            "\n" +
             "      conf_file = args['proguardProcessedConfFile']\n" +
             "      FileUtils.install f.path, conf_file, :mode => 0666, :verbose => false\n" +
+            "\n" +
             "      args['logger'].logMsg(\"Created new proguard configuration at #{conf_file}\")\n" +
             "    end\n" +
             "  end\n" +
@@ -205,8 +231,9 @@ public class ProguardCacheRuby extends RubyObject  {
             "      puts \"input directory: #{i}\"\n" +
             "    end\n" +
             "    args['classFiles'] = args['classFiles'].map {|f| JvmEntityBuilder.create f}\n" +
-            "    build_proguard_file args\n" +
             "    result = build_proguard_dependencies args\n" +
+            "    all_classnames = calculate_classnames_in_cache_dir args['cacheDir']\n" +
+            "    build_proguard_file(args.merge 'classnames' => all_classnames)\n" +
             "    run_proguard result.merge('logger' => logger)\n" +
             "  end\n" +
             "\n" +
@@ -222,12 +249,22 @@ public class ProguardCacheRuby extends RubyObject  {
             "    load additional_file\n" +
             "  end\n" +
             "\n" +
+            "  java_signature 'void clean_cache(String cacheDir)'\n" +
+            "\n" +
+            "  def clean_cache cache_dir\n" +
+            "    depend_files = Dir.glob(cache_dir.to_s + \"/**/*.proto_depend\")\n" +
+            "    jar_files = Dir.glob(cache_dir.to_s + \"/**/*.jar\")\n" +
+            "    dependency_lines = Dir.glob(cache_dir.to_s + \"/**/dependency_lines*\")\n" +
+            "    (depend_files + jar_files + dependency_lines).each do |f|\n" +
+            "      File.unlink f\n" +
+            "    end\n" +
+            "  end\n" +
+            "\n" +
             "  def setup_external_variables args\n" +
             "    $WORKSPACE_DIR = args['workspaceDir']\n" +
             "    $PROJECT_DIR = args['projectDir']\n" +
             "    $BUILDER_ARGS = args\n" +
             "    $ADDITIONAL_LIBS = []\n" +
-            "    puts \"globals now set\"\n" +
             "  end\n" +
             "end\n" +
             "").toString();
@@ -325,6 +362,14 @@ public class ProguardCacheRuby extends RubyObject  {
     }
 
     
+    public Object calculate_classnames_in_cache_dir(Object cache_dir) {
+        IRubyObject ruby_cache_dir = JavaUtil.convertJavaToRuby(__ruby__, cache_dir);
+        IRubyObject ruby_result = RuntimeHelpers.invoke(__ruby__.getCurrentContext(), this, "calculate_classnames_in_cache_dir", ruby_cache_dir);
+        return (Object)ruby_result.toJava(Object.class);
+
+    }
+
+    
     public Object build_dependency_files(Object input_items, Object cache_dir) {
         IRubyObject ruby_input_items = JavaUtil.convertJavaToRuby(__ruby__, input_items);
         IRubyObject ruby_cache_dir = JavaUtil.convertJavaToRuby(__ruby__, cache_dir);
@@ -370,6 +415,14 @@ public class ProguardCacheRuby extends RubyObject  {
         IRubyObject ruby_args = JavaUtil.convertJavaToRuby(__ruby__, args);
         IRubyObject ruby_result = RuntimeHelpers.invoke(__ruby__.getCurrentContext(), this, "update_and_load_additional_libs_ruby_file", ruby_args);
         return (Object)ruby_result.toJava(Object.class);
+
+    }
+
+    
+    public void clean_cache(String cacheDir) {
+        IRubyObject ruby_cacheDir = JavaUtil.convertJavaToRuby(__ruby__, cacheDir);
+        IRubyObject ruby_result = RuntimeHelpers.invoke(__ruby__.getCurrentContext(), this, "clean_cache", ruby_cacheDir);
+        return;
 
     }
 

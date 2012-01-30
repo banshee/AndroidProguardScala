@@ -42,9 +42,6 @@ module AsmSupport
     end
 
     def self.build_for_filename klass, filename
-      require 'pp'
-      pp "kasdf", klass, filename
-
       o = AsmVisitorHarness.new klass
       case filename
       when /\.class$/
