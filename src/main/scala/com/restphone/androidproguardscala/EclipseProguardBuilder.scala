@@ -36,13 +36,15 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   val streamContainsOnlyBuildArtifacts: PartialFunction[Stream[IPath], Boolean] = {
     case h #:: Stream.Empty if (pathIsBuildArtifact(h)) => true
   }
+  def inverse[T](fn: PartialFunction[T, Boolean]) = fn andThen {!_}
+  val streamContainsNonBuildArtifacts = inverse(streamContainsOnlyBuildArtifacts)
 
   override def build(kind: Int, args: java.util.Map[String, String], monitor: IProgressMonitor): Array[IProject] = {
     val affected_paths = getDelta(getProject) match {
       case x: IResourceDelta => x.getAffectedChildren map { _.getFullPath }
       case null => Array.empty[IPath]
     }
-    val buildRequired = !cond(affected_paths.toStream)(streamContainsOnlyBuildArtifacts)
+    val buildRequired = cond(affected_paths.toStream)(streamContainsNonBuildArtifacts)
 
     logMsg("build is required: " + buildRequired)
 
