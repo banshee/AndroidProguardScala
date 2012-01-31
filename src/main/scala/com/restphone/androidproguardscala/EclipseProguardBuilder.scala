@@ -173,8 +173,11 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   val bundle = Platform.getBundle("com.restphone.androidproguardscala");
 
   def pathToFileRelativeToPluginBundle(p: IPath) = {
+    require(p != null, "must pass an IPath")
     val entry = bundle.getEntry(p.toString)
+    assert(entry != null, "attempt to create a URL for path %s returned null".format(p.toString))
     val f = FileLocator.toFileURL(entry)
+    assert(f != null, "attempt to create a URL for entry %s failed".format(entry.toString))
     new File(f.getFile)
   }
 
