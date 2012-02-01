@@ -36,13 +36,15 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   val streamContainsOnlyBuildArtifacts: PartialFunction[Stream[IPath], Boolean] = {
     case h #:: Stream.Empty if (pathIsBuildArtifact(h)) => true
   }
+  def inverse[T](fn: PartialFunction[T, Boolean]) = fn andThen {!_}
+  val streamContainsNonBuildArtifacts = inverse(streamContainsOnlyBuildArtifacts)
 
   override def build(kind: Int, args: java.util.Map[String, String], monitor: IProgressMonitor): Array[IProject] = {
     val affected_paths = getDelta(getProject) match {
       case x: IResourceDelta => x.getAffectedChildren map { _.getFullPath }
       case null => Array.empty[IPath]
     }
-    val buildRequired = !cond(affected_paths.toStream)(streamContainsOnlyBuildArtifacts)
+    val buildRequired = cond(affected_paths.toStream)(streamContainsNonBuildArtifacts)
 
     logMsg("build is required: " + buildRequired)
 
@@ -171,8 +173,11 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   val bundle = Platform.getBundle("com.restphone.androidproguardscala");
 
   def pathToFileRelativeToPluginBundle(p: IPath) = {
+    require(p != null, "must pass an IPath")
     val entry = bundle.getEntry(p.toString)
+    assert(entry != null, "attempt to create a URL for path %s returned null".format(p.toString))
     val f = FileLocator.toFileURL(entry)
+    assert(f != null, "attempt to create a URL for entry %s failed".format(entry.toString))
     new File(f.getFile)
   }
 
