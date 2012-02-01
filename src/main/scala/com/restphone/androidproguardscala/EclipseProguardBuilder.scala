@@ -23,6 +23,7 @@ import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.resources.IResourceDelta
 import com.restphone.androidproguardscala.jruby._
+import javax.management.RuntimeErrorException
 
 trait ProvidesLogging {
   def logMsg(msg: String)
@@ -175,11 +176,12 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
 
   def pathToFileRelativeToPluginBundle(p: IPath) = {
     require(p != null, "must pass an IPath")
-    val entry = bundle.getEntry(p.toString)
-    assert(entry != null, "attempt to create a URL for path %s returned null".format(p.toString))
-    val f = FileLocator.toFileURL(entry)
-    assert(f != null, "attempt to create a URL for entry %s failed".format(entry.toString))
-    new File(f.getFile)
+    val result = for {
+      u <- NotNull(FileLocator.find(bundle, p, null), "cannot find path " + p)
+      filenameUrl <- NotNull(Platform.resolve(u), "Platform.resolve must not return null")
+      f = new File(filenameUrl.getFile)
+    } yield f
+    result.get
   }
 
   def pluginDirectory = pathToFileRelativeToPluginBundle(new Path("/"))
@@ -204,6 +206,16 @@ class Activator extends org.eclipse.ui.plugin.AbstractUIPlugin {
 
   override def start(context: BundleContext) {
     super.start(context);
+  }
+}
+
+object NotNull {
+  def apply[T](x: T, msg: String = "must not be null") = {
+    val result = Option(x)
+    if (result.isDefined) result
+    else {
+      throw new RuntimeException(msg)
+    }
   }
 }
 
