@@ -48,7 +48,7 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
     }
     val buildRequired = buildArtifactsRequireRebuild(affected_paths.toStream)
 
-    logMsg("build is required: " + buildRequired)
+    logMsg("build is required: " + buildRequired + " for artifacts " + affected_paths.mkString(", "))
 
     if (buildRequired) {
       val scalaArgs = mapAsScalaMap(args.asInstanceOf[java.util.Map[String, String]])
