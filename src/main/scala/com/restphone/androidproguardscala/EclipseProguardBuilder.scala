@@ -1,7 +1,6 @@
 package com.restphone.androidproguardscala
 
 import scala.PartialFunction._
-import java.io.File
 import scala.collection.JavaConversions.mapAsScalaMap
 import scala.collection.JavaConversions.seqAsJavaList
 import org.eclipse.core.resources.IProject
@@ -31,10 +30,11 @@ trait ProvidesLogging {
 }
 
 class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
+  import RichPath._
   import RichFile._
 
   def pathIsBuildArtifact(p: IPath) = p.lastSegment.indexOf("proguard_") == 0
-  
+
   def buildArtifactsRequireRebuild(xs: Stream[IPath]): Boolean = xs match {
     case h #:: Stream.Empty if (pathIsBuildArtifact(h)) => false
     case h #:: t if (pathIsBuildArtifact(h)) => buildArtifactsRequireRebuild(t)
@@ -48,14 +48,15 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
     }
     val buildRequired = buildArtifactsRequireRebuild(affected_paths.toStream)
 
-    logMsg("build is required: " + buildRequired)
+    logMsg("build is required: " + buildRequired + " for artifacts " + affected_paths.mkString(", "))
 
     if (buildRequired) {
       val scalaArgs = mapAsScalaMap(args.asInstanceOf[java.util.Map[String, String]])
 
-      val proguardDefaults = slurp(pathToFileRelativeToPluginBundle(new Path("proguard_cache_conf/proguard_defaults.conf")))
+      val pathToDefaultsFile = pluginDirectory / "proguard_cache_conf" / "proguard_defaults.conf"
+      val proguardDefaults = slurp(pathToDefaultsFile.toFile)
 
-      Seq(cacheDirectory, confDirectory, libDirectory) foreach ensureDirExists
+      Seq(cacheDirectory, confDirectory, libDirectory) foreach RichPath.ensureDirExists
 
       val proguardProcessedConfFile = confDirectory / "proguard_postprocessed.conf"
       val proguardAdditionsFile = confDirectory / "proguard_additions.conf"
@@ -66,9 +67,11 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
 
       import scala.collection.JavaConversions.asJavaMap
 
+      logMsg("output folders are " + existingOutputFolders)
+
       val parameters = {
         val fileParameters = {
-          val javaFileParameters: Map[String, File] = Map(
+          val javaFileParameters: Map[String, IPath] = Map(
             "cacheDir" -> cacheDirectory,
             "confDir" -> confDirectory,
             "workspaceDir" -> rootDirectoryOfWorkspace,
@@ -78,12 +81,18 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
             "cachedJar" -> cachedJar,
             "outputJar" -> outputJar,
             "scalaLibraryJar" -> scalaLibraryJar,
-            "androidLibraryJar" -> pathToAndroidJar.toFile)
-          javaFileParameters mapValues toRubyFile
+            "androidLibraryJar" -> pathToAndroidJar)
+
+          logMsg("javaFileParameters are: " + javaFileParameters)
+
+          // Make sure all values are non-null - trying to find the source of a reported error
+          javaFileParameters foreach { case (k, v) => assert(v != null, "value for %s must not be null".format(k)) }
+
+          javaFileParameters mapValues objToString
         }
 
         val otherParameters = Map(
-          "classFiles" -> (outputFoldersFiles map toRubyFile toArray),
+          "classFiles" -> (existingOutputFolders map objToString toArray),
           "proguardDefaults" -> proguardDefaults,
           "logger" -> logger())
 
@@ -102,18 +111,20 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
     Array.empty
   }
 
-  override def clean(monitor: IProgressMonitor): Unit = rubyCacheController.clean_cache(toRubyFile(cacheDirectory))
+  override def clean(monitor: IProgressMonitor): Unit = rubyCacheController.clean_cache(cacheDirectory.toString)
 
-  lazy val rootDirectoryOfProject = ipathToFile(getProject.getLocation)
+  lazy val rootDirectoryOfProject = getProject.getLocation
   lazy val cacheDirectory = rootDirectoryOfProject / "proguard_cache"
   lazy val confDirectory = rootDirectoryOfProject / "proguard_cache_conf"
   lazy val libDirectory = rootDirectoryOfProject / "lib"
   lazy val scalaProject = scala.tools.eclipse.ScalaProject(getProject)
 
-  def outputFolders: Seq[IPath] = scalaProject outputFolders
-  def outputFoldersFiles = outputFolders map ipathToFile map { f => rootDirectoryOfWorkspace / f.toString }
-
-  def toRubyFile(f: File) = f.toString.replace('\\', '/')
+  def existingOutputFolders = {
+    // The IDE may have decided that some paths are the destination for class files without actually
+    // creating those directories.  Only reporting ones that exist already.
+    val outputFoldersAsIPaths = scalaProject.sourceOutputFolders.map { case (src, dest) => dest.getLocation }
+    outputFoldersAsIPaths filter fileExists toSet
+  }
 
   def logger() = new ProvidesLogging {
     def logMsg(msg: String) = AndroidProguardScalaBuilder.this.logMsg(msg)
@@ -130,9 +141,10 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
     entry map { f => new java.io.File(f.toString) } getOrElse null
   }
 
-  def pathToAndroidJar = {
+  def pathToAndroidJar: IPath = {
     val entry = getResolvedClasspathEntries filter lastSegmentIsAndroidLibrary find fileExists
-    entry getOrElse null
+    if (entry.isDefined) entry.get
+    else throw new RuntimeException("cannot find android library in " + getResolvedClasspathEntries)
   }
 
   def getResolvedClasspathEntries() = {
@@ -156,7 +168,7 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   def objToString[T](x: T) = x.toString
 
   def rootDirectoryOfWorkspace = {
-    ipathToFile(ResourcesPlugin.getWorkspace.getRoot.getLocation)
+    ResourcesPlugin.getWorkspace.getRoot.getLocation
   }
 
   def pathForJarFileContainingClass[T](c: Class[T]) = {
@@ -174,17 +186,14 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
 
   val bundle = Platform.getBundle("com.restphone.androidproguardscala");
 
-  def pathToFileRelativeToPluginBundle(p: IPath) = {
-    require(p != null, "must pass an IPath")
+  def pluginDirectory = {
     val result = for {
-      u <- NotNull(FileLocator.find(bundle, p, null), "cannot find path " + p)
+      u <- NotNull(FileLocator.find(bundle, new Path("/"), null), "cannot find directory for bundle")
       filenameUrl <- NotNull(Platform.resolve(u), "Platform.resolve must not return null")
-      f = new File(filenameUrl.getFile)
+      f = new Path(filenameUrl.getFile)
     } yield f
     result.get
   }
-
-  def pluginDirectory = pathToFileRelativeToPluginBundle(new Path("/"))
 
   def logMsg(msg: String, status: Integer = IStatus.OK) = {
     val log = Platform.getLog(bundle);
@@ -210,7 +219,7 @@ class Activator extends org.eclipse.ui.plugin.AbstractUIPlugin {
 }
 
 object NotNull {
-  def apply[T](x: T, msg: String = "must not be null") = {
+  def apply[T](x: T, msg: String = "must not be null"): Option[T] = {
     val result = Option(x)
     if (result.isDefined) result
     else {
@@ -219,49 +228,13 @@ object NotNull {
   }
 }
 
-object Proguarder {
-  def pathToProguardClassPathEntry(isOutput: Boolean)(p: String) = {
-    new proguard.ClassPathEntry(new File(p), isOutput)
-  }
-  val pathToProguardClassPathOutputEntry = pathToProguardClassPathEntry(true)(_)
-  val pathToProguardClassPathInputEntry = pathToProguardClassPathEntry(false)(_)
-
-  def confForCache(scalaLib: String, inputDirs: Seq[String], outputJar: String, libJars: Seq[String]) = {
-    val c = new proguard.Configuration
-
-    val cp = new proguard.ClassPath
-
-    cp.add(pathToProguardClassPathInputEntry(scalaLib + "(!META-INF/MANIFEST.MF,!library.properties)"))
-
-    cp.add(pathToProguardClassPathOutputEntry(outputJar))
-
-    def appendClasspathEntry(x: String) = cp.add(pathToProguardClassPathInputEntry(x))
-    inputDirs foreach appendClasspathEntry
-    libJars foreach appendClasspathEntry
-
-    c.programJars = cp
-
-    c.obfuscate = false
-    c.warn = List.empty[String]
-    c.optimize = false
-    c.skipNonPublicLibraryClasses = false
-    c.skipNonPublicLibraryClassMembers = false
-    c.keepAttributes = List("Exceptions", "InnerClasses", "Signature", "Deprecated", "SourceFile", "LineNumberTable", "*Annotation*", "EnclosingMethod")
-    c
-  }
-}
+import java.io.File
 
 class RichFile(f: File) {
   def /(that: String) = new File(f, that)
 }
 
 object RichFile {
-  implicit def toRichFile(f: File): RichFile = new RichFile(f)
-  implicit def fileToPath(f: File): IPath = Path.fromOSString(f.toString)
-  implicit def pathToFile(p: IPath): File = p.toFile
-  def toFilenameAsString(f: File) = f.toString
-  def stringToFile(f: String) = new File(f)
-  def ipathToFile(p: IPath) = p.toFile
   def slurp(f: File) = {
     val s = scala.io.Source.fromFile(f)
     val result = s.getLines.mkString("\n")
@@ -270,4 +243,18 @@ object RichFile {
   }
   def ensureDirExists(f: File) =
     if (!f.exists) f.mkdir
+}
+
+class RichPath(p: IPath) {
+  def /(that: String) = p.append(that)
+}
+
+object RichPath {
+  implicit def toRichPath(p: IPath): RichPath = new RichPath(p)
+  implicit def convertFileToPath(f: java.io.File): IPath = Path.fromOSString(f.toString)
+  implicit def convertUrlToPath(u: java.net.URL) = {
+    val x = Platform.resolve(u)
+    new Path(x.getFile)
+  }
+  def ensureDirExists(p: IPath) = RichFile.ensureDirExists(p.toFile)
 }
