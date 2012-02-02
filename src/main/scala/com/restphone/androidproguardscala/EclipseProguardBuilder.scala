@@ -219,49 +219,13 @@ object NotNull {
   }
 }
 
-object Proguarder {
-  def pathToProguardClassPathEntry(isOutput: Boolean)(p: String) = {
-    new proguard.ClassPathEntry(new File(p), isOutput)
-  }
-  val pathToProguardClassPathOutputEntry = pathToProguardClassPathEntry(true)(_)
-  val pathToProguardClassPathInputEntry = pathToProguardClassPathEntry(false)(_)
-
-  def confForCache(scalaLib: String, inputDirs: Seq[String], outputJar: String, libJars: Seq[String]) = {
-    val c = new proguard.Configuration
-
-    val cp = new proguard.ClassPath
-
-    cp.add(pathToProguardClassPathInputEntry(scalaLib + "(!META-INF/MANIFEST.MF,!library.properties)"))
-
-    cp.add(pathToProguardClassPathOutputEntry(outputJar))
-
-    def appendClasspathEntry(x: String) = cp.add(pathToProguardClassPathInputEntry(x))
-    inputDirs foreach appendClasspathEntry
-    libJars foreach appendClasspathEntry
-
-    c.programJars = cp
-
-    c.obfuscate = false
-    c.warn = List.empty[String]
-    c.optimize = false
-    c.skipNonPublicLibraryClasses = false
-    c.skipNonPublicLibraryClassMembers = false
-    c.keepAttributes = List("Exceptions", "InnerClasses", "Signature", "Deprecated", "SourceFile", "LineNumberTable", "*Annotation*", "EnclosingMethod")
-    c
-  }
-}
+import java.io.File
 
 class RichFile(f: File) {
   def /(that: String) = new File(f, that)
 }
 
 object RichFile {
-  implicit def toRichFile(f: File): RichFile = new RichFile(f)
-  implicit def fileToPath(f: File): IPath = Path.fromOSString(f.toString)
-  implicit def pathToFile(p: IPath): File = p.toFile
-  def toFilenameAsString(f: File) = f.toString
-  def stringToFile(f: String) = new File(f)
-  def ipathToFile(p: IPath) = p.toFile
   def slurp(f: File) = {
     val s = scala.io.Source.fromFile(f)
     val result = s.getLines.mkString("\n")
