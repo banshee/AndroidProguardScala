@@ -10,6 +10,12 @@ and install.
 
 3.  Observe that the directories 'proguard_cache' and 'proguard_cache_conf' are created.
 
+proguard_cache contains the cached libraries and the files used to figure out which cached library to use (including whether or
+not a new library needs to be generated.
+
+proguard_cache_conf contains the generated proguard configuration files.  You should be able to use 
+proguard_postprocessesd.conf as a config file outside of this tool.
+
 4.  The builder should create 'lib/scala-library.min.jar'.  Add that to your classpath.
 
 BUILDING
