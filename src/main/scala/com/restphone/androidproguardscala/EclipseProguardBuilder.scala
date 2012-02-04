@@ -66,7 +66,7 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
 
       val cachedJar = cacheDirectory / "scala-library.CKSUM.jar"
 
-      val outputJar = rootDirectoryOfProject / "lib" / "scala_library.min.jar"
+      val outputJar = rootDirectoryOfProject / "lib" / AndroidProguardScalaBuilder.minifiedScalaLibraryName
 
       import scala.collection.JavaConversions.asJavaMap
 
@@ -98,8 +98,9 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
 
         val extraLibs = javaProject.getRawClasspath filter
           isCpeLibrary map
-          { _.getPath } filter
-          fileExists map
+          { _.getPath.removeFirstSegments(1) } map
+          { rootDirectoryOfProject.append(_)} filterNot
+          { _.lastSegment.equals(AndroidProguardScalaBuilder.minifiedScalaLibraryName) } map
           objToString toArray
 
         val otherParameters = Map(
@@ -233,6 +234,7 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
 
 object AndroidProguardScalaBuilder {
   val BUILDER_ID = "com.restphone.androidproguardscala.Builder";
+  val minifiedScalaLibraryName = "scala_library.min.jar"
 }
 
 class Activator extends org.eclipse.ui.plugin.AbstractUIPlugin {
