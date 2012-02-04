@@ -184,6 +184,10 @@ Example: jruby -S rake -T -v proguard[proguard_android_scala.config,proguard_cac
         f.puts %Q(-libraryjars "#{args['androidLibraryJar']}")
       end
 
+      args['extraLibs'].each do |lib|
+        f.puts %Q(-libraryjars "#{lib}")
+      end
+
       f.puts "\n# Builtin defaults"
       f.write defaults
       f.puts "\n# Inserting file #{args['proguardAdditionsFile']} - possibly empty"
