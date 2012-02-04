@@ -11,6 +11,7 @@ import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.runtime.Platform
 import org.eclipse.core.resources.IResourceDelta
+import org.eclipse.jdt.core._
 import org.jruby.Ruby
 import org.objectweb.asm.Type
 import org.osgi.framework.BundleContext
@@ -23,6 +24,8 @@ import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.resources.IResourceDelta
 import com.restphone.androidproguardscala.jruby._
 import javax.management.RuntimeErrorException
+
+import org.eclipse.core.resources._
 
 trait ProvidesLogging {
   def logMsg(msg: String)
@@ -69,6 +72,8 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
 
       logMsg("output folders are " + existingOutputFolders)
 
+      def isCpeLibrary(x: IClasspathEntry) = x.getEntryKind == IClasspathEntry.CPE_LIBRARY
+
       val parameters = {
         val fileParameters = {
           val javaFileParameters: Map[String, IPath] = Map(
@@ -91,8 +96,15 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
           javaFileParameters mapValues objToString
         }
 
+        val extraLibs = javaProject.getRawClasspath filter
+          isCpeLibrary map
+          { _.getPath } filter
+          fileExists map
+          objToString toArray
+
         val otherParameters = Map(
           "classFiles" -> (existingOutputFolders map objToString toArray),
+          "extraLibs" -> extraLibs,
           "proguardDefaults" -> proguardDefaults,
           "logger" -> logger())
 
@@ -106,9 +118,20 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
         // Java Map objects.
         rubyCacheController.build_dependency_files_and_final_jar(asJavaMap(parameters))
       }
+
+      Iterable(outputJar, confDirectory, cacheDirectory) foreach refresh
     }
 
     Array.empty
+  }
+
+  def refresh(p: IPath) = {
+    getProject.getFile(p).refreshLocal(IResource.DEPTH_INFINITE, null)
+  }
+
+  def projectContainsMinifiedOutput = {
+    val entry = getResolvedClasspathEntries filter lastSegmentIsScalaLibrary find fileExists
+    entry map { f => new java.io.File(f.toString) } getOrElse null
   }
 
   override def clean(monitor: IProgressMonitor): Unit = rubyCacheController.clean_cache(cacheDirectory.toString)
@@ -147,9 +170,13 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
     else throw new RuntimeException("cannot find android library in " + getResolvedClasspathEntries)
   }
 
+  lazy val javaProject = JavaCore.create(getProject)
+
   def getResolvedClasspathEntries() = {
-    val p = JavaCore.create(getProject)
-    p.getResolvedClasspath(false) map { _.getPath }
+    javaProject.getResolvedClasspath(false) map { _.getPath }
+  }
+
+  def getRawClasspathEntries = {
   }
 
   lazy val rubyCacheController = {
