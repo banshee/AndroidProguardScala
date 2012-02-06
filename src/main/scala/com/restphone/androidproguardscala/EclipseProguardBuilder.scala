@@ -96,16 +96,17 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
           javaFileParameters mapValues objToString
         }
 
-        val extraLibs = javaProject.getRawClasspath filter
-          isCpeLibrary map
-          { _.getPath.removeFirstSegments(1) } map
-          { rootDirectoryOfProject.append(_)} filterNot
-          { _.lastSegment.equals(AndroidProguardScalaBuilder.minifiedScalaLibraryName) } map
-          objToString toArray
+        val libraryLocations: Array[IPath] = for {
+          rawClasspathEntry <- javaProject.getRawClasspath if isCpeLibrary(rawClasspathEntry)
+          relativePath <- NotNull(rawClasspathEntry.getPath, "getPath failed for " + rawClasspathEntry)
+          lastSegment <- NotNull(relativePath.lastSegment) if (lastSegment != AndroidProguardScalaBuilder.minifiedScalaLibraryName)
+          resource <- NotNull(getWorkspaceRoot.findMember(relativePath), "findMember failed for " + relativePath)
+          locationWithExistingJar <- NotNull(resource.getLocation, "getLocation failed for " + resource) if fileExists(locationWithExistingJar)
+        } yield locationWithExistingJar
 
         val otherParameters = Map(
           "classFiles" -> (existingOutputFolders map objToString toArray),
-          "extraLibs" -> extraLibs,
+          "extraLibs" -> libraryLocations,
           "proguardDefaults" -> proguardDefaults,
           "logger" -> logger())
 
@@ -195,8 +196,9 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
 
   def objToString[T](x: T) = x.toString
 
+  def getWorkspaceRoot = ResourcesPlugin.getWorkspace.getRoot
   def rootDirectoryOfWorkspace = {
-    ResourcesPlugin.getWorkspace.getRoot.getLocation
+    getWorkspaceRoot.getLocation
   }
 
   def pathForJarFileContainingClass[T](c: Class[T]) = {
@@ -250,10 +252,9 @@ class Activator extends org.eclipse.ui.plugin.AbstractUIPlugin {
 object NotNull {
   def apply[T](x: T, msg: String = "must not be null"): Option[T] = {
     val result = Option(x)
+
     if (result.isDefined) result
-    else {
-      throw new RuntimeException(msg)
-    }
+    else throw new RuntimeException(msg)
   }
 }
 
