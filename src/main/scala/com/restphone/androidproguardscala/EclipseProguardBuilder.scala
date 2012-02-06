@@ -73,6 +73,13 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
       logMsg("output folders are " + existingOutputFolders)
 
       def isCpeLibrary(x: IClasspathEntry) = x.getEntryKind == IClasspathEntry.CPE_LIBRARY
+      def isMinifiedLibraryName(s: String) = s == AndroidProguardScalaBuilder.minifiedScalaLibraryName
+
+      val processedClasspathEntries = for {
+        rawClasspathEntry <- javaProject.getRawClasspath if isCpeLibrary(rawClasspathEntry)
+        relativePath <- NotNull(rawClasspathEntry.getPath, "getPath failed for " + rawClasspathEntry)
+        libraryName <- NotNull(relativePath.lastSegment)
+      } yield (relativePath, libraryName)
 
       val parameters = {
         val fileParameters = {
@@ -97,11 +104,9 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
         }
 
         val libraryLocations: Array[IPath] = for {
-          rawClasspathEntry <- javaProject.getRawClasspath if isCpeLibrary(rawClasspathEntry)
-          relativePath <- NotNull(rawClasspathEntry.getPath, "getPath failed for " + rawClasspathEntry)
-          lastSegment <- NotNull(relativePath.lastSegment) if (lastSegment != AndroidProguardScalaBuilder.minifiedScalaLibraryName)
-          resource <- NotNull(getWorkspaceRoot.findMember(relativePath), "findMember failed for " + relativePath)
-          locationWithExistingJar <- NotNull(resource.getLocation, "getLocation failed for " + resource) if fileExists(locationWithExistingJar)
+          (relativePath, libraryName) <- processedClasspathEntries if !isMinifiedLibraryName(libraryName)
+          member <- NotNull(getWorkspaceRoot.findMember(relativePath), "findMember failed for " + relativePath)
+          locationWithExistingJar <- NotNull(member.getLocation, "getLocation failed for " + member) if fileExists(locationWithExistingJar)
         } yield locationWithExistingJar
 
         val otherParameters = Map(
@@ -115,10 +120,16 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
 
       logMsg("Build parameters are: " + parameters)
 
-      if (buildRequired) {
-        // Using asJavaMap because JRuby has magic that adds many Ruby Hash methods to 
-        // Java Map objects.
-        rubyCacheController.build_dependency_files_and_final_jar(asJavaMap(parameters))
+      // Using asJavaMap because JRuby has magic that adds many Ruby Hash methods to 
+      // Java Map objects.
+      rubyCacheController.build_dependency_files_and_final_jar(asJavaMap(parameters))
+
+      val classpathEntryForMinifedLibrary = processedClasspathEntries find { case (_, libraryName) => isMinifiedLibraryName(libraryName) }
+      if (classpathEntryForMinifedLibrary.isEmpty) {
+        val newEntry = JavaCore.newLibraryEntry(outputJar, null, null)
+        val newClasspath = javaProject.getRawClasspath ++ Iterable(newEntry)
+        javaProject.setRawClasspath(newClasspath, monitor)
+        logMsg("Added minified scala jar %s to classpath".format(outputJar))
       }
 
       Iterable(outputJar, confDirectory, cacheDirectory) foreach refresh
