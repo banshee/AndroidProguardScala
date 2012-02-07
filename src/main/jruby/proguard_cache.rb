@@ -186,7 +186,7 @@ Example: jruby -S rake -T -v proguard[proguard_android_scala.config,proguard_cac
 
       extra_libs = args['extraLibs'] 
       f.puts "\n# Extra libraries"
-      extra_libs.each do |lib|
+      (extra_libs || []).each do |lib|
         f.puts %Q(-libraryjars "#{lib}")
       end
 
