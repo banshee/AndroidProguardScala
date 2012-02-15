@@ -201,7 +201,7 @@ public class ProguardCacheRuby extends RubyObject  {
             "\n" +
             "      extra_libs = args['extraLibs'] \n" +
             "      f.puts \"\\n# Extra libraries\"\n" +
-            "      extra_libs.each do |lib|\n" +
+            "      (extra_libs || []).each do |lib|\n" +
             "        f.puts %Q(-libraryjars \"#{lib}\")\n" +
             "      end\n" +
             "\n" +
