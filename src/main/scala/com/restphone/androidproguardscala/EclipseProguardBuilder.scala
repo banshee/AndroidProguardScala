@@ -202,7 +202,7 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
     val jrubyLibDir = pluginDirectory / "src/main/jruby"
     JrubyEnvironmentSetup.addToLoadPath(jrubyLibDir.toString)
 
-    new ProguardCacheRuby
+    new ProguardCacheJava
   }
 
   def objToString[T](x: T) = x.toString
