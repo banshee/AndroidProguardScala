@@ -21,6 +21,19 @@ module AsmSupport
         :visitMethodInsn]
     end
 
+    def tracked_method? m
+      m =~ /^scala/
+    end
+    
+    def visitFieldInsn *args
+      depends_on :visitFieldInsn, *args if tracked_method? args[1]
+      depends_on :visitFieldInsn_fieldtype, args[3] 
+    end
+    
+    def visitMethodInsn *args
+      depends_on :visitMethodInsn, *args if tracked_method? args[1]
+    end
+    
     def visitAsClass *args
       #      int version,
       #      int access,
@@ -30,7 +43,11 @@ module AsmSupport
       #      String[] interfaces);
       name = args[2]
       @current_class = name
-      depends_on :visitAsClass, *(args[3..-1])
+      depends_on :visitAsClass_signature, args[3]
+      depends_on :visitAsClass_superName, args[4]
+      (args[5] || []).each do |a|
+        depends_on :visitAsClass_interface, a
+      end
     end
 
     def method_missing name, *args
