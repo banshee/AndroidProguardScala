@@ -231,7 +231,7 @@ Example: jruby -S rake -T -v proguard[proguard_android_scala.config,proguard_cac
   end
 
   def update_and_load_additional_libs_ruby_file args
-    additional_file = args.confDir + "/additional_libs.rb"
+    additional_file = args.confDir.to_s + "/additional_libs.rb"
     if !File.exists? additional_file
       FileUtils.mkdir_p Pathname.new(additional_file).dirname
       File.open(additional_file, "w") do |f|

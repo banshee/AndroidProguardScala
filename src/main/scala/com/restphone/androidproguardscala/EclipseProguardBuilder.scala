@@ -54,12 +54,12 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
       val pathToDefaultsFile = pluginDirectory / "proguard_cache_conf" / "proguard_defaults.conf"
       val proguardDefaults = slurp(pathToDefaultsFile.toFile)
 
-      Seq(cacheDirectory, confDirectory, libDirectory) foreach RichPath.ensureDirExists
+      Seq(cacheDir, confDir, libDirectory) foreach RichPath.ensureDirExists
 
-      val proguardProcessedConfFile = confDirectory / "proguard_postprocessed.conf"
-      val proguardAdditionsFile = confDirectory / "proguard_additions.conf"
+      val proguardProcessedConfFile = confDir / "proguard_postprocessed.conf"
+      val proguardAdditionsFile = confDir / "proguard_additions.conf"
 
-      val cachedJar = cacheDirectory / "scala-library.CKSUM.jar"
+      val cachedJar = cacheDir / "scala-library.CKSUM.jar"
 
       val outputJar = rootDirectoryOfProject / "lib" / AndroidProguardScalaBuilder.minifiedScalaLibraryName
 
@@ -76,50 +76,43 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
         libraryName <- NotNull(relativePath.lastSegment)
       } yield (relativePath, libraryName)
 
-      val parameters = {
-        val fileParameters = {
-          val javaFileParameters: Map[String, IPath] = Map(
-            "cacheDir" -> cacheDirectory,
-            "confDir" -> confDirectory,
-            "workspaceDir" -> rootDirectoryOfWorkspace,
-            "projectDir" -> rootDirectoryOfProject,
-            "proguardAdditionsFile" -> proguardAdditionsFile,
-            "proguardProcessedConfFile" -> proguardProcessedConfFile,
-            "cachedJar" -> cachedJar,
-            "outputJar" -> outputJar,
-            "scalaLibraryJar" -> scalaLibraryJar,
-            "androidLibraryJar" -> pathToAndroidJar)
+      val libraryLocations: Array[IPath] = for {
+        (relativePath, libraryName) <- processedClasspathEntries if !isMinifiedLibraryName(libraryName)
+        member <- NotNull(getWorkspaceRoot.findMember(relativePath), "findMember failed for " + relativePath)
+        locationWithExistingJar <- NotNull(member.getLocation, "getLocation failed for " + member) if fileExists(locationWithExistingJar)
+      } yield locationWithExistingJar
 
-          logMsg("javaFileParameters are: " + javaFileParameters)
-
-          // Make sure all values are non-null - trying to find the source of a reported error
-          javaFileParameters foreach { case (k, v) => assert(v != null, "value for %s must not be null".format(k)) }
-
-          javaFileParameters mapValues objToString
-        }
-
-        val libraryLocations: Array[IPath] = for {
-          (relativePath, libraryName) <- processedClasspathEntries if !isMinifiedLibraryName(libraryName)
-          member <- NotNull(getWorkspaceRoot.findMember(relativePath), "findMember failed for " + relativePath)
-          locationWithExistingJar <- NotNull(member.getLocation, "getLocation failed for " + member) if fileExists(locationWithExistingJar)
-        } yield locationWithExistingJar
-
-        val otherParameters = Map(
-          "classFiles" -> (existingOutputFolders map objToString toArray),
-          "extraLibs" -> libraryLocations,
-          "proguardDefaults" -> proguardDefaults,
-          "logger" -> logger())
-
-        fileParameters ++ otherParameters
-      }
-
-      logMsg("Build parameters are: " + parameters)
+      val otherParameters = Map(
+        "classFiles" -> (existingOutputFolders map objToString toArray),
+        "extraLibs" -> libraryLocations,
+        "proguardDefaults" -> proguardDefaults,
+        "logger" -> logger())
 
       // Using asJavaMap because JRuby has magic that adds many Ruby Hash methods to 
       // Java Map objects.
       monitor.beginTask("Computing dependencies and running Proguard", 2)
       monitor.worked(1)
-      rubyCacheController.build_dependency_files_and_final_jar(asJavaMap(parameters))
+
+      implicit def convertIPathToString(p: IPath): String = p.toString
+      implicit def convertFileToString(f: File): String = f.getAbsolutePath
+
+      val params = new ProguardCacheParameters(
+        cacheDir = cacheDir,
+        confDir = confDir,
+        workspaceDir = rootDirectoryOfWorkspace,
+        projectDir = rootDirectoryOfProject,
+        proguardAdditionsFile = proguardAdditionsFile,
+        proguardProcessedConfFile = proguardProcessedConfFile,
+        cachedJar = cachedJar,
+        outputJar = outputJar,
+        scalaLibraryJar = scalaLibraryJar,
+        androidLibraryJar = pathToAndroidJar,
+        classFiles = (existingOutputFolders map convertIPathToString).toArray,
+        extraLibs = libraryLocations map convertIPathToString,
+        proguardDefaults = proguardDefaults,
+        logger = logger)
+
+      rubyCacheController.build_dependency_files_and_final_jar(params)
 
       val classpathEntryForMinifedLibrary = processedClasspathEntries find { case (_, libraryName) => isMinifiedLibraryName(libraryName) }
       if (classpathEntryForMinifedLibrary.isEmpty) {
@@ -129,13 +122,13 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
         logMsg("Added minified scala jar %s to classpath".format(outputJar))
       }
 
-      Iterable(outputJar, confDirectory, cacheDirectory) foreach refresh
+      Iterable(outputJar, confDir, cacheDir) foreach tellEclipsePathNeedsToBeRefreshed
     }
 
     Array.empty
   }
 
-  def refresh(p: IPath) = {
+  def tellEclipsePathNeedsToBeRefreshed(p: IPath) = {
     getProject.getFile(p).refreshLocal(IResource.DEPTH_INFINITE, null)
   }
 
@@ -144,11 +137,11 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
     entry map { f => new java.io.File(f.toString) } getOrElse null
   }
 
-  override def clean(monitor: IProgressMonitor): Unit = rubyCacheController.clean_cache(cacheDirectory.toString)
+  override def clean(monitor: IProgressMonitor): Unit = rubyCacheController.clean_cache(cacheDir.toString)
 
   lazy val rootDirectoryOfProject = getProject.getLocation
-  lazy val cacheDirectory = rootDirectoryOfProject / "proguard_cache"
-  lazy val confDirectory = rootDirectoryOfProject / "proguard_cache_conf"
+  lazy val cacheDir = rootDirectoryOfProject / "proguard_cache"
+  lazy val confDir = rootDirectoryOfProject / "proguard_cache_conf"
   lazy val libDirectory = rootDirectoryOfProject / "lib"
   lazy val scalaProject = scala.tools.eclipse.ScalaProject(getProject)
 
@@ -169,7 +162,7 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   val lastSegmentIsAndroidLibrary = lastSegmentIsString("android.jar")
   val fileExists = (p: IPath) => p.toFile.exists
 
-  def scalaLibraryJar = {
+  def scalaLibraryJar: File = {
     val entry = getResolvedClasspathEntries filter lastSegmentIsScalaLibrary find fileExists
     entry map { f => new java.io.File(f.toString) } getOrElse null
   }

@@ -1,25 +1,26 @@
 package com.restphone.androidproguardscala
 
-case class FullyQualifiedPath(path: String) {
-  override def toString = path
-}
-
-case object FullyQualifiedPath {
-  implicit def convertToString(p: FullyQualifiedPath) = p.path
-}
+//
+//case class String(path: String) {
+//  override def toString = path
+//}
+//
+//case object String {
+//  implicit def convertToString(p: String) = p.path
+//}
 
 case class ProguardCacheParameters(
-  cacheDir: FullyQualifiedPath,
-  confDir: FullyQualifiedPath,
-  workspaceDir: FullyQualifiedPath,
-  projectDir: FullyQualifiedPath,
-  proguardAdditionsFile: FullyQualifiedPath,
-  proguardProcessedConfFile: FullyQualifiedPath,
-  cachedJar: FullyQualifiedPath,
-  outputJar: FullyQualifiedPath,
-  scalaLibraryJar: FullyQualifiedPath,
-  androidLibraryJar: FullyQualifiedPath,
-  classFiles: Array[FullyQualifiedPath],
-  extraLibs: Array[FullyQualifiedPath],
+  cacheDir: String,
+  confDir: String,
+  workspaceDir: String,
+  projectDir: String,
+  proguardAdditionsFile: String,
+  proguardProcessedConfFile: String,
+  cachedJar: String,
+  outputJar: String,
+  scalaLibraryJar: String,
+  androidLibraryJar: String,
+  classFiles: Array[String],
+  extraLibs: Array[String],
   proguardDefaults: String,
   logger: ProvidesLogging)

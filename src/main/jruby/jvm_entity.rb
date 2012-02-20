@@ -46,6 +46,7 @@ end
 
 class JvmEntityBuilder
   def self.create f
+    f = f.to_s
     case f
     when /\.jar$/i
       JarFile.new f
