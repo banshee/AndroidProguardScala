@@ -249,6 +249,11 @@ Example: jruby -S rake -T -v proguard[proguard_android_scala.config,proguard_cac
     (depend_files + jar_files + dependency_lines).each do |f|
       File.unlink f
     end
+    # The checksum has 40 characters - only delete directories that are exactly that long
+    dependency_directories = Dir.glob(cache_dir.to_s + "/*").select do |d|
+      (File.basename d).length == 40
+    end
+    dependency_directories.each {|d| FileUtils.rm_rf d} 
   end
 
   def setup_external_variables args
