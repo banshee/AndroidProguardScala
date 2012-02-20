@@ -8,6 +8,8 @@ require 'proguardrunner'
 require 'pathname'
 require 'fileutils'
 require 'jvm_entity'
+require 'ostruct'
+require 'proguard_cache_parameters'
 
 java_package 'com.restphone.androidproguardscala.jruby'
 
@@ -118,13 +120,11 @@ Example: jruby -S rake -T -v proguard[proguard_android_scala.config,proguard_cac
 "
 
   def build_proguard_dependencies args
-    args = Hash[args]
-
-    input_entities = args['classFiles']
-    proguard_config_file = args['proguardProcessedConfFile']
-    destination_jar = args['outputJar']
-    cache_dir = args['cacheDir']
-    cached_jar = args['cachedJar']
+    input_entities = args.classFiles
+    proguard_config_file = args.proguardProcessedConfFile
+    destination_jar = args.outputJar
+    cache_dir = args.cacheDir
+    cached_jar = args.cachedJar
 
     proguard_config_file or raise "You must specify proguardProcessedConfFile"
     destination_jar or raise "You must specify a destination jar"
@@ -141,22 +141,23 @@ Example: jruby -S rake -T -v proguard[proguard_android_scala.config,proguard_cac
       f.write contents
     end
 
-    {:proguard_destination_file => proguard_destination_file,
+    ProguardCacheParameters.new :parent_parameters => args, :new_parameters => {
+      :proguard_destination_file => proguard_destination_file,
       :proguard_config_file => proguard_config_file,
       :dependency_checksum => dependency_checksum,
       :destination_jar => destination_jar}
   end
 
   def run_proguard args
-    destination_file = args[:proguard_destination_file]
-    logger = args['logger']
-    config_file = args[:proguard_config_file]
+    destination_file = args.proguard_destination_file
+    logger = args.logger
+    config_file = args.proguard_config_file
     if !File.exists?(destination_file)
       logger.logMsg("Running proguard with config file " + config_file)
-      ProguardRunner.execute_proguard(:config_file => config_file, :cksum => ".#{args[:dependency_checksum]}")
+      ProguardRunner.execute_proguard(:config_file => config_file, :cksum => ".#{args.dependency_checksum}")
     end
     if File.exists?(destination_file)
-      destination_jar = args[:destination_jar]
+      destination_jar = args.destination_jar
       FileUtils.install destination_file, destination_jar, :mode => 0666, :verbose => false
       logger.logMsg("installed #{destination_file} to #{destination_jar}")
     else
@@ -168,23 +169,23 @@ Example: jruby -S rake -T -v proguard[proguard_android_scala.config,proguard_cac
   def build_proguard_file args
     require 'tempfile'
     Tempfile.open("android_scala_proguard") do |f|
-      defaults = args['proguardDefaults']
-      scala_library_jar = args['scalaLibraryJar']
+      defaults = args.proguardDefaults
+      scala_library_jar = args.scalaLibraryJar
       f.puts "# scala-library.jar was calculated from the classpath"
       f.puts %Q[-injars "#{scala_library_jar}"(!META-INF/MANIFEST.MF)\n]
       f.puts "\n# The CKSUM string is significant - it will be replaced with an actual checksum"
-      f.puts %Q[-outjar "#{args['cachedJar']}"]
-      args['classFiles'].each do |classfile|
+      f.puts %Q[-outjar "#{args.cachedJar}"]
+      args.classFiles.each do |classfile|
         f.puts %Q[-injar "#{classfile}"]
       end
 
-      android_lib_jar = args['androidLibraryJar']
+      android_lib_jar = args.androidLibraryJar
       if android_lib_jar
         f.puts "\n# Android library calculated from classpath"
-        f.puts %Q(-libraryjars "#{args['androidLibraryJar']}")
+        f.puts %Q(-libraryjars "#{args.androidLibraryJar}")
       end
 
-      extra_libs = args['extraLibs'] 
+      extra_libs = args.extraLibs
       f.puts "\n# Extra libraries"
       (extra_libs || []).each do |lib|
         f.puts %Q(-libraryjars "#{lib}")
@@ -192,45 +193,47 @@ Example: jruby -S rake -T -v proguard[proguard_android_scala.config,proguard_cac
 
       f.puts "\n# Builtin defaults"
       f.write defaults
-      f.puts "\n# Inserting file #{args['proguardAdditionsFile']} - possibly empty"
-      if File.exists? args['proguardAdditionsFile']
-        additions_file = File.new args['proguardAdditionsFile']
+      f.puts "\n# Inserting file #{args.proguardAdditionsFile} - possibly empty"
+      if File.exists? args.proguardAdditionsFile
+        additions_file = File.new args.proguardAdditionsFile
         f.write additions_file.read
       end
 
       f.puts "# Keep all non-scala classess"
-      args['classnames'].each do |classname|
+      args.classnames.each do |classname|
         f.puts "-keep class #{classname} {*;}"
       end
       f.flush
 
-      conf_file = args['proguardProcessedConfFile']
+      conf_file = args.proguardProcessedConfFile
       FileUtils.install f.path, conf_file, :mode => 0666, :verbose => false
 
-      args['logger'].logMsg("Created new proguard configuration at #{conf_file}")
+      args.logger.logMsg("Created new proguard configuration at #{conf_file}")
     end
   end
 
   def build_dependency_files_and_final_jar args
-    args = Hash[args]
-    logger = args['logger']
+    logger = args.logger
     setup_external_variables args
     update_and_load_additional_libs_ruby_file args
-    args['classFiles'] = (args['classFiles'] + ($ADDITIONAL_LIBS || [])).sort.uniq
-    args['classFiles'].each do |i|
+    classFiles = (args.classFiles + ($ADDITIONAL_LIBS || [])).sort.uniq
+    classFiles.each do |i|
       raise "non-existant input directory: " + i.to_s unless File.exists? i.to_s
       puts "input directory: #{i}"
     end
-    args['classFiles'] = args['classFiles'].map {|f| JvmEntityBuilder.create f}
-    result = build_proguard_dependencies args
-    all_classnames = calculate_classnames_in_cache_dir args['cacheDir']
-    build_proguard_file(args.merge 'classnames' => all_classnames)
-    run_proguard result.merge('logger' => logger)
+    classFiles = classFiles.map {|f| JvmEntityBuilder.create f}
+    new_parameters = ProguardCacheParameters.new :parent_parameters => args, :new_parameters => {:classFiles => classFiles}
+    result = build_proguard_dependencies new_parameters
+    all_classnames = calculate_classnames_in_cache_dir new_parameters.cacheDir
+    parameters_after_calculating_classes = ProguardCacheParameters.new :parent_parameters => new_parameters, :new_parameters => {'classnames' => all_classnames}
+    build_proguard_file parameters_after_calculating_classes
+    run_proguard result
   end
 
   def update_and_load_additional_libs_ruby_file args
-    additional_file = args['confDir'] + "/additional_libs.rb"
+    additional_file = args.confDir + "/additional_libs.rb"
     if !File.exists? additional_file
+      FileUtils.mkdir_p Pathname.new(additional_file).dirname
       File.open(additional_file, "w") do |f|
         f.puts "# Auto-generated sample file. "
         f.puts "# $WORKSPACE_DIR is set to the path for the current workspace"
@@ -253,13 +256,16 @@ Example: jruby -S rake -T -v proguard[proguard_android_scala.config,proguard_cac
     dependency_directories = Dir.glob(cache_dir.to_s + "/*").select do |d|
       (File.basename d).length == 40
     end
-    dependency_directories.each {|d| FileUtils.rm_rf d} 
+    dependency_directories.each {|d| FileUtils.rm_rf d}
   end
 
   def setup_external_variables args
-    $WORKSPACE_DIR = args['workspaceDir']
-    $PROJECT_DIR = args['projectDir']
+    $WORKSPACE_DIR = args.workspaceDir
+    $PROJECT_DIR = args.projectDir
     $BUILDER_ARGS = args
     $ADDITIONAL_LIBS = []
   end
 end
+
+#  visitAsClass  -    -  com/restphone/uricurrency/UrlConnector$ConnectionResult  -  scala/Product  -  scala/Serializable
+#visitMethodInsn  -  182  -  com/restphone/uricurrency/UrlConnector$$anonfun$1$$anonfun$apply$2$$anonfun$apply$3$$anonfun$apply$5  -  apply  -  (Lscala/Tuple4;)Lcom/restphone/uricurrency/UrlConnector$LiveConnection;
