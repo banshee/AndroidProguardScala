@@ -1,6 +1,5 @@
 require 'java'
 require 'proguard_cache_requires'
-require 'pp'
 
 module AsmSupport
   class AsmVisitorHarness
@@ -14,6 +13,7 @@ module AsmSupport
         class_reader = (construct.new_instance file_input_stream).to_java
         result = class_reader.accept(visitor_object, 0)
       rescue Exception => e
+        require 'pp'
         pp "EXCEPTION ------------------------------------", e
         pp e.backtrace
       end

@@ -1,5 +1,4 @@
 require 'java'
-require 'pp'
 
 module AsmSupport
   class InterfaceVisitor < GenericVisitor

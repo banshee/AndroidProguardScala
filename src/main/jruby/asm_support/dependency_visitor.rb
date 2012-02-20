@@ -1,5 +1,4 @@
 require 'java'
-require 'pp'
 require 'asm_support'
 
 module AsmSupport
