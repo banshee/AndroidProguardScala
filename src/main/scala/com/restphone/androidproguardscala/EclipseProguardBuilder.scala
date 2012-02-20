@@ -24,7 +24,7 @@ import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.resources.IResourceDelta
 import com.restphone.androidproguardscala.jruby._
 import javax.management.RuntimeErrorException
-
+import java.io.File
 import org.eclipse.core.resources._
 
 trait ProvidesLogging {
@@ -270,8 +270,6 @@ object NotNull {
     else throw new RuntimeException(msg)
   }
 }
-
-import java.io.File
 
 class RichFile(f: File) {
   def /(that: String) = new File(f, that)
