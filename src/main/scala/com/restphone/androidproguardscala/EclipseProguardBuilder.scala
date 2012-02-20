@@ -122,6 +122,8 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
 
       // Using asJavaMap because JRuby has magic that adds many Ruby Hash methods to 
       // Java Map objects.
+      monitor.beginTask("Computing dependencies and running Proguard", 2)
+      monitor.worked(1)
       rubyCacheController.build_dependency_files_and_final_jar(asJavaMap(parameters))
 
       val classpathEntryForMinifedLibrary = processedClasspathEntries find { case (_, libraryName) => isMinifiedLibraryName(libraryName) }
