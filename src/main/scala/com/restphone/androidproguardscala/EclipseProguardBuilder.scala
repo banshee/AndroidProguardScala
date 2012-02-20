@@ -27,16 +27,11 @@ import javax.management.RuntimeErrorException
 import java.io.File
 import org.eclipse.core.resources._
 
-trait ProvidesLogging {
-  def logMsg(msg: String)
-  def logError(msg: String)
-}
-
 class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   import RichPath._
   import RichFile._
 
-  def pathIsBuildArtifact(p: IPath) = p.lastSegment.indexOf("proguard_") == 0
+  def pathIsBuildArtifact(p: IPath) = p.lastSegment.startsWith("proguard_")
 
   def buildArtifactsRequireRebuild(xs: Stream[IPath]): Boolean = xs match {
     case h #:: Stream.Empty if (pathIsBuildArtifact(h)) => false
