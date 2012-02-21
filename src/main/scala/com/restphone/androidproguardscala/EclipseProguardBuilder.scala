@@ -84,12 +84,6 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
         locationWithExistingJar <- NotNull(member.getLocation, "getLocation failed for " + member) if fileExists(locationWithExistingJar)
       } yield locationWithExistingJar
 
-      val otherParameters = Map(
-        "classFiles" -> (existingOutputFolders map objToString toArray),
-        "extraLibs" -> libraryLocations,
-        "proguardDefaults" -> proguardDefaults,
-        "logger" -> logger())
-
       // Using asJavaMap because JRuby has magic that adds many Ruby Hash methods to 
       // Java Map objects.
       monitor.beginTask("Computing dependencies and running Proguard", 2)
