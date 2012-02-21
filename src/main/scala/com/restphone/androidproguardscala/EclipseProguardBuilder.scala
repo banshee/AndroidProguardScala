@@ -90,7 +90,6 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
       monitor.worked(1)
 
       implicit def convertIPathToString(p: IPath): String = p.toString
-      implicit def convertFileToString(f: File): String = f.getAbsolutePath
 
       val params = new ProguardCacheParameters(
         cacheDir = cacheDir,
@@ -101,7 +100,7 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
         proguardProcessedConfFile = proguardProcessedConfFile,
         cachedJar = cachedJar,
         outputJar = outputJar,
-        scalaLibraryJar = scalaLibraryJar,
+        scalaLibraryJar = scalaLibraryJar.toString,
         androidLibraryJar = pathToAndroidJar,
         classFiles = (existingOutputFolders map convertIPathToString).toArray,
         extraLibs = libraryLocations map convertIPathToString,
