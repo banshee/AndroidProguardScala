@@ -6,8 +6,11 @@ java_package 'com.restphone.androidproguardscala.jruby'
 class ProguardCacheJava
   def initialize *args
     @ruby_object = ProguardCacheRuby.new
+    jruby_jarfile = args.first
+    @@jruby_initialized ||= JrubyEnvironmentSetup.add_jruby_jarfile(jruby_jarfile)
   end
   
+  java_signature 'void buildDependencyFilesAndFinalJar(ProguardCacheParameters params)'
   def build_dependency_files_and_final_jar *args
     @ruby_object.build_dependency_files_and_final_jar *args
   end
