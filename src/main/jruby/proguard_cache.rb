@@ -266,6 +266,3 @@ Example: jruby -S rake -T -v proguard[proguard_android_scala.config,proguard_cac
     $ADDITIONAL_LIBS = []
   end
 end
-
-#  visitAsClass  -    -  com/restphone/uricurrency/UrlConnector$ConnectionResult  -  scala/Product  -  scala/Serializable
-#visitMethodInsn  -  182  -  com/restphone/uricurrency/UrlConnector$$anonfun$1$$anonfun$apply$2$$anonfun$apply$3$$anonfun$apply$5  -  apply  -  (Lscala/Tuple4;)Lcom/restphone/uricurrency/UrlConnector$LiveConnection;
