@@ -1,31 +1,33 @@
 package com.restphone.androidproguardscala
 
-import scala.PartialFunction._
+import java.io.File
+
 import scala.collection.JavaConversions.mapAsScalaMap
-import scala.collection.JavaConversions.seqAsJavaList
+
 import org.eclipse.core.resources.IProject
+import org.eclipse.core.resources.IResource
+import org.eclipse.core.resources.IResourceDelta
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.FileLocator
+import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.runtime.Platform
-import org.eclipse.core.resources.IResourceDelta
-import org.eclipse.jdt.core._
+import org.eclipse.core.runtime.Status
+import org.eclipse.jdt.core.IClasspathEntry
+import org.eclipse.jdt.core.JavaCore
 import org.jruby.Ruby
 import org.objectweb.asm.Type
 import org.osgi.framework.BundleContext
+
+import com.restphone.androidproguardscala.RichPath.toRichPath
+import com.restphone.androidproguardscala.jruby.JrubyEnvironmentSetup
+import com.restphone.androidproguardscala.jruby.ProguardCacheJava
+
+import RichFile.slurp
 import proguard.Initializer
-import org.eclipse.core.runtime.IPath
-import org.eclipse.jdt.internal.core.JavaProject
-import org.eclipse.jdt.core.JavaCore
-import org.eclipse.core.runtime.Status
-import org.eclipse.core.runtime.IStatus
-import org.eclipse.core.resources.IResourceDelta
-import com.restphone.androidproguardscala.jruby._
-import javax.management.RuntimeErrorException
-import java.io.File
-import org.eclipse.core.resources._
 
 class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   import RichPath._
