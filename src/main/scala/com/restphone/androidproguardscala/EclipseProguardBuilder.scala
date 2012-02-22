@@ -29,6 +29,7 @@ import com.restphone.androidproguardscala.jruby.ProguardCacheJava
 import RichFile.slurp
 import proguard.Initializer
 
+
 class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   import RichPath._
   import RichFile._
@@ -184,7 +185,8 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
     loadClassIntoJRuby(classOf[proguard.Initializer])
     loadClassIntoJRuby(classOf[List[String]])
 
-    val jrubyLibDir = pluginDirectory / "src/main/jruby"
+    val jrubyLibDir = pluginDirectory / "lib_src/main/jruby"
+    logMsg("adding dir to jruby" + jrubyLibDir)
     JrubyEnvironmentSetup.addToLoadPath(jrubyLibDir.toString)
 
     new ProguardCacheJava

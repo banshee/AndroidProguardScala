@@ -6,8 +6,6 @@ import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IProjectNature;
 import org.eclipse.core.runtime.CoreException;
 
-import com.restphone.androidproguardscala.AndroidProguardScalaBuilder;
-
 public class AndroidProguardScalaNature implements IProjectNature {
   public static final String NATURE_ID = "com.restphone.androidproguardscala.Nature";
 
