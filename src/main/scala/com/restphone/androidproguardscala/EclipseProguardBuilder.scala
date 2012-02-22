@@ -1,9 +1,7 @@
 package com.restphone.androidproguardscala
 
 import java.io.File
-
 import scala.collection.JavaConversions.mapAsScalaMap
-
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.IResourceDelta
@@ -21,12 +19,8 @@ import org.eclipse.jdt.core.JavaCore
 import org.jruby.Ruby
 import org.objectweb.asm.Type
 import org.osgi.framework.BundleContext
-
-import com.restphone.androidproguardscala.RichPath.toRichPath
-import com.restphone.androidproguardscala.jruby.ProguardCacheJava
-
-import RichFile.slurp
 import proguard.Initializer
+
 
 class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   import RichPath._
@@ -53,7 +47,7 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
       val scalaArgs = mapAsScalaMap(args.asInstanceOf[java.util.Map[String, String]])
 
       val pathToDefaultsFile = pluginDirectory / "proguard_cache_conf" / "proguard_defaults.conf"
-      val proguardDefaults = slurp(pathToDefaultsFile.toFile)
+      val proguardDefaults = RichFile.slurp(pathToDefaultsFile.toFile)
 
       Seq(cacheDir, confDir, libDirectory) foreach RichPath.ensureDirExists
 
@@ -106,7 +100,7 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
         proguardDefaults = proguardDefaults,
         logger = logger)
 
-      rubyCacheController.build_dependency_files_and_final_jar(params)
+      executeSequenceOfProguardEvents(params)
 
       val classpathEntryForMinifedLibrary = processedClasspathEntries find { case (_, libraryName) => isMinifiedLibraryName(libraryName) }
       if (classpathEntryForMinifedLibrary.isEmpty) {
@@ -122,11 +116,15 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
     Array.empty
   }
 
+  val executeSequenceOfProguardEvents = ((rubyCacheController.build_proguard_dependency_files _) andThen
+    rubyCacheController.run_proguard andThen
+    rubyCacheController.install_proguard_output)
+
   def tellEclipsePathNeedsToBeRefreshed(p: IPath) = {
     getProject.getFile(p).refreshLocal(IResource.DEPTH_INFINITE, null)
   }
-  
-  lazy val rubyCacheController = ProguardCache.buildCacheController(pluginDirectory.toString)
+
+  lazy val rubyCacheController = ProguardCacheBuilder.buildCacheController(pluginDirectory.toString)
 
   def projectContainsMinifiedOutput = {
     val entry = getResolvedClasspathEntries filter lastSegmentIsScalaLibrary find fileExists
