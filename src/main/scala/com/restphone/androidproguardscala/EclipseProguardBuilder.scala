@@ -23,12 +23,11 @@ import org.objectweb.asm.Type
 import org.osgi.framework.BundleContext
 
 import com.restphone.androidproguardscala.RichPath.toRichPath
-import com.restphone.androidproguardscala.jruby.JrubyEnvironmentSetup
+import com.restphone.androidproguardscala.jruby.JrubyEnvironmentSetup._
 import com.restphone.androidproguardscala.jruby.ProguardCacheJava
 
 import RichFile.slurp
 import proguard.Initializer
-
 
 class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   import RichPath._
@@ -179,15 +178,18 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   }
 
   lazy val rubyCacheController = {
-    JrubyEnvironmentSetup.addJrubyJarfile(pathForJarFileContainingClass(classOf[org.jruby.Ruby]))
+    addJrubyJarfile(pathForJarFileContainingClass(classOf[org.jruby.Ruby]))
 
-    loadClassIntoJRuby(classOf[org.objectweb.asm.Type])
-    loadClassIntoJRuby(classOf[proguard.Initializer])
-    loadClassIntoJRuby(classOf[List[String]])
+    List(
+      classOf[org.objectweb.asm.Type],
+      classOf[proguard.Initializer],
+      classOf[List[String]]) foreach { loadClassIntoJRuby(_) }
 
-    val jrubyLibDir = pluginDirectory / "lib_src/main/jruby"
-    logMsg("adding dir to jruby" + jrubyLibDir)
-    JrubyEnvironmentSetup.addToLoadPath(jrubyLibDir.toString)
+    Iterable(
+      pluginDirectory / "lib_src/main/jruby",
+      pluginDirectory / "jruby_lib/main/jruby") map
+      objToString foreach
+      addToLoadPath
 
     new ProguardCacheJava
   }
@@ -209,7 +211,7 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   }
 
   def loadJarIntoJRuby(path: String) = {
-    JrubyEnvironmentSetup.addJarToLoadPathAndRequire(path)
+    addJarToLoadPathAndRequire(path)
   }
 
   val bundle = Platform.getBundle("com.restphone.androidproguardscala");
