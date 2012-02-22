@@ -126,7 +126,7 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
     getProject.getFile(p).refreshLocal(IResource.DEPTH_INFINITE, null)
   }
   
-  lazy val rubyCacheController = JrubyEnvironmentSetup.rubyCacheController(pluginDirectory.toString)
+  lazy val rubyCacheController = ProguardCache.buildCacheController(pluginDirectory.toString)
 
   def projectContainsMinifiedOutput = {
     val entry = getResolvedClasspathEntries filter lastSegmentIsScalaLibrary find fileExists
