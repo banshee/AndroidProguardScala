@@ -23,7 +23,6 @@ import org.objectweb.asm.Type
 import org.osgi.framework.BundleContext
 
 import com.restphone.androidproguardscala.RichPath.toRichPath
-import com.restphone.androidproguardscala.jruby.JrubyEnvironmentSetup._
 import com.restphone.androidproguardscala.jruby.ProguardCacheJava
 
 import RichFile.slurp
@@ -126,6 +125,8 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   def tellEclipsePathNeedsToBeRefreshed(p: IPath) = {
     getProject.getFile(p).refreshLocal(IResource.DEPTH_INFINITE, null)
   }
+  
+  lazy val rubyCacheController = JrubyEnvironmentSetup.rubyCacheController(pluginDirectory.toString)
 
   def projectContainsMinifiedOutput = {
     val entry = getResolvedClasspathEntries filter lastSegmentIsScalaLibrary find fileExists
@@ -177,41 +178,11 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   def getRawClasspathEntries = {
   }
 
-  lazy val rubyCacheController = {
-    addJrubyJarfile(pathForJarFileContainingClass(classOf[org.jruby.Ruby]))
-
-    List(
-      classOf[org.objectweb.asm.Type],
-      classOf[proguard.Initializer],
-      classOf[List[String]]) foreach { loadClassIntoJRuby(_) }
-
-    Iterable(
-      pluginDirectory / "lib_src/main/jruby",
-      pluginDirectory / "jruby_lib/main/jruby") map
-      objToString foreach
-      addToLoadPath
-
-    new ProguardCacheJava
-  }
-
   def objToString[T](x: T) = x.toString
 
   def getWorkspaceRoot = ResourcesPlugin.getWorkspace.getRoot
   def rootDirectoryOfWorkspace = {
     getWorkspaceRoot.getLocation
-  }
-
-  def pathForJarFileContainingClass[T](c: Class[T]) = {
-    c.getProtectionDomain.getCodeSource.getLocation.getPath
-  }
-
-  def loadClassIntoJRuby[T](c: Class[T]) = {
-    val p = pathForJarFileContainingClass(c)
-    loadJarIntoJRuby(p)
-  }
-
-  def loadJarIntoJRuby(path: String) = {
-    addJarToLoadPathAndRequire(path)
   }
 
   val bundle = Platform.getBundle("com.restphone.androidproguardscala");
