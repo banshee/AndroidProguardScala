@@ -21,6 +21,7 @@ import org.objectweb.asm.Type
 import org.osgi.framework.BundleContext
 import proguard.Initializer
 
+import scala.util.control.Exception._
 
 class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   import RichPath._
@@ -100,7 +101,9 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
         proguardDefaults = proguardDefaults,
         logger = logger)
 
-      executeSequenceOfProguardEvents(params)
+      ((rubyCacheController.build_proguard_dependency_files _) andThen
+        rubyCacheController.run_proguard andThen
+        rubyCacheController.install_proguard_output)(params)
 
       val classpathEntryForMinifedLibrary = processedClasspathEntries find { case (_, libraryName) => isMinifiedLibraryName(libraryName) }
       if (classpathEntryForMinifedLibrary.isEmpty) {
@@ -115,10 +118,6 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
 
     Array.empty
   }
-
-  val executeSequenceOfProguardEvents = ((rubyCacheController.build_proguard_dependency_files _) andThen
-    rubyCacheController.run_proguard andThen
-    rubyCacheController.install_proguard_output)
 
   def tellEclipsePathNeedsToBeRefreshed(p: IPath) = {
     getProject.getFile(p).refreshLocal(IResource.DEPTH_INFINITE, null)
@@ -215,15 +214,6 @@ class Activator extends org.eclipse.ui.plugin.AbstractUIPlugin {
 
   override def start(context: BundleContext) {
     super.start(context);
-  }
-}
-
-object NotNull {
-  def apply[T](x: T, msg: String = "must not be null"): Option[T] = {
-    val result = Option(x)
-
-    if (result.isDefined) result
-    else throw new RuntimeException(msg)
   }
 }
 
