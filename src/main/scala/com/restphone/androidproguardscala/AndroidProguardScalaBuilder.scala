@@ -36,19 +36,19 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   }
 
   override def build(kind: Int, args: java.util.Map[String, String], monitor: IProgressMonitor): Array[IProject] = {
-    val affected_paths = getDelta(getProject) match {
-      case x: IResourceDelta => x.getAffectedChildren map { _.getFullPath }
-      case null => Array.empty[IPath]
+    val buildRequired = {
+      val affected_paths = getDelta(getProject) match {
+        case x: IResourceDelta => x.getAffectedChildren map { _.getFullPath }
+        case null => Array.empty[IPath]
+      }
+      buildArtifactsRequireRebuild(affected_paths.toStream)
     }
-    val buildRequired = buildArtifactsRequireRebuild(affected_paths.toStream)
-
-    logMsg("build is required: " + buildRequired + " for artifacts " + affected_paths.mkString(", "))
 
     if (buildRequired) {
-      val scalaArgs = mapAsScalaMap(args.asInstanceOf[java.util.Map[String, String]])
-
-      val pathToDefaultsFile = pluginDirectory / "proguard_cache_conf" / "proguard_defaults.conf"
-      val proguardDefaults = RichFile.slurp(pathToDefaultsFile.toFile)
+      val proguardDefaults = {
+        val pathToDefaultsFile = pluginDirectory / "proguard_cache_conf" / "proguard_defaults.conf"
+        RichFile.slurp(pathToDefaultsFile.toFile)
+      }
 
       Seq(cacheDir, confDir, libDirectory) foreach RichPath.ensureDirExists
 
@@ -59,12 +59,7 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
 
       val outputJar = rootDirectoryOfProject / "lib" / AndroidProguardScalaBuilder.minifiedScalaLibraryName
 
-      import scala.collection.JavaConversions.asJavaMap
-
       logMsg("output folders are " + existingOutputFolders)
-
-      def isCpeLibrary(x: IClasspathEntry) = x.getEntryKind == IClasspathEntry.CPE_LIBRARY
-      def isMinifiedLibraryName(s: String) = s == AndroidProguardScalaBuilder.minifiedScalaLibraryName
 
       val processedClasspathEntries = for {
         rawClasspathEntry <- javaProject.getRawClasspath if isCpeLibrary(rawClasspathEntry)
@@ -137,6 +132,9 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   lazy val confDir = rootDirectoryOfProject / "proguard_cache_conf"
   lazy val libDirectory = rootDirectoryOfProject / "lib"
   lazy val scalaProject = scala.tools.eclipse.ScalaProject(getProject)
+
+  def isCpeLibrary(x: IClasspathEntry) = x.getEntryKind == IClasspathEntry.CPE_LIBRARY
+  def isMinifiedLibraryName(s: String) = s == AndroidProguardScalaBuilder.minifiedScalaLibraryName
 
   def existingOutputFolders = {
     // The IDE may have decided that some paths are the destination for class files without actually
