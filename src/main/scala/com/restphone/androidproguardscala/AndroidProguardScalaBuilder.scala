@@ -1,7 +1,11 @@
 package com.restphone.androidproguardscala
 
 import java.io.File
-import scala.collection.JavaConversions.mapAsScalaMap
+
+import scala.Array.canBuildFrom
+import scala.Option.option2Iterable
+import scala.annotation.implicitNotFound
+
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.IResourceDelta
@@ -16,12 +20,9 @@ import org.eclipse.core.runtime.Platform
 import org.eclipse.core.runtime.Status
 import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.jdt.core.JavaCore
-import org.jruby.Ruby
-import org.objectweb.asm.Type
 import org.osgi.framework.BundleContext
-import proguard.Initializer
 
-import scala.util.control.Exception._
+import com.restphone.androidproguardscala.RichPath.toRichPath
 
 class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   import RichPath._
@@ -191,7 +192,7 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
     result.get
   }
 
-  def logMsg(msg: String, status: Integer = IStatus.OK) = {
+  def logMsg(msg: String, status: Integer = IStatus.INFO) = {
     val log = Platform.getLog(bundle);
     val s = new Status(status, pluginId, msg)
     log.log(s)
