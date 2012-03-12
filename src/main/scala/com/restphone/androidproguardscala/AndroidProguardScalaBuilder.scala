@@ -2,10 +2,6 @@ package com.restphone.androidproguardscala
 
 import java.io.File
 
-import scala.Array.canBuildFrom
-import scala.Option.option2Iterable
-import scala.annotation.implicitNotFound
-
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.IResourceDelta
@@ -91,9 +87,8 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
         cachedJar = cachedJar,
         outputJar = outputJar,
         scalaLibraryJar = scalaLibraryJar.toString,
-        androidLibraryJar = pathToAndroidJar,
         classFiles = (existingOutputFolders map convertIPathToString).toArray,
-        extraLibs = libraryLocations map convertIPathToString,
+        libraryJars = (libraryLocations ++ List(pathToAndroidJar) map convertIPathToString),
         proguardDefaults = proguardDefaults,
         logger = logger)
 

@@ -37,7 +37,7 @@
                label="Toggle AndroidProguardScala Nature"
                class="com.restphone.androidproguardscala.ToggleNatureAction"
                menubarPath="additions"
-               enablesFor="+"
+               enablesFor="1"
                id="AndroidProguardScala.addRemoveNatureAction">
          </action>
       </objectContribution>
