@@ -3,3 +3,5 @@ lib
 .DS_Store
 .cache
 plugins/*.jar
+project/
+target/
