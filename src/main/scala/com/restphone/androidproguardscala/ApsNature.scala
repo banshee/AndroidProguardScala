@@ -1,12 +1,12 @@
 package com.restphone.androidproguardscala
 
-import scala.beans.BeanProperty
+import scala.reflect.BeanProperty
 
 import org.eclipse.core.resources.ICommand
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IProjectNature
 
-class ApsNature extends IProjectNature {
+class AndroidProguardScalaNature extends IProjectNature {
   @BeanProperty var project: IProject = null
 
   def desc = project.getDescription
@@ -14,24 +14,23 @@ class ApsNature extends IProjectNature {
   def builderNameMatches(x: ICommand) = x.getBuilderName == AndroidProguardScalaBuilder.BUILDER_ID
   def existingBuilder = existingCommands find builderNameMatches
 
-  override def configure = {
+  override def configure =
     existingBuilder getOrElse {
       val command = desc.newCommand
       command.setBuilderName(AndroidProguardScalaBuilder.BUILDER_ID)
       desc.setBuildSpec(existingCommands ++ Array(command))
       project.setDescription(desc, null)
     }
-  }
 
-  override def deconfigure = {
-    existingBuilder foreach { _ =>
-      val otherBuilders = existingCommands filterNot builderNameMatches
-      desc.setBuildSpec(otherBuilders)
-      project.setDescription(desc, null)
+  override def deconfigure =
+    existingBuilder foreach {
+      _ =>
+        val otherBuilders = existingCommands filterNot builderNameMatches
+        desc.setBuildSpec(otherBuilders)
+        project.setDescription(desc, null)
     }
-  }
 }
 
-object ApsNature {
+object AndroidProguardScalaNature {
   val NATURE_ID = "com.restphone.androidproguardscala.Nature"
 }

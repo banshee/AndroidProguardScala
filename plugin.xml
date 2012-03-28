@@ -34,12 +34,36 @@
             nameFilter="*"
             id="AndroidProguardScala.contribution1">
          <action
-               label="Toggle AndroidProguardScala Nature"
+               label="Add AndroidProguardScala Nature"
                class="com.restphone.androidproguardscala.ToggleNatureAction"
                menubarPath="additions"
                enablesFor="1"
                id="AndroidProguardScala.addRemoveNatureAction">
          </action>
+         <visibility>
+           <not>
+             <objectState name="projectNature" value="com.restphone.androidproguardscala.Nature" />
+           </not>
+         </visibility>
+      </objectContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="true"
+            objectClass="org.eclipse.core.resources.IProject"
+            nameFilter="*"
+            id="AndroidProguardScala.contribution1">
+         <action
+               label="Remove AndroidProguardScala Nature"
+               class="com.restphone.androidproguardscala.ToggleNatureAction"
+               menubarPath="additions"
+               enablesFor="1"
+               id="AndroidProguardScala.addRemoveNatureAction">
+         </action>
+         <visibility>
+             <objectState name="projectNature" value="com.restphone.androidproguardscala.Nature" />
+         </visibility>
       </objectContribution>
    </extension>
    <extension

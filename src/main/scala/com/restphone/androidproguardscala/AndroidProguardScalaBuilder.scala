@@ -1,7 +1,6 @@
 package com.restphone.androidproguardscala
 
 import java.io.File
-
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.IResourceDelta
@@ -17,8 +16,8 @@ import org.eclipse.core.runtime.Status
 import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.jdt.core.JavaCore
 import org.osgi.framework.BundleContext
-
 import com.restphone.androidproguardscala.RichPath.toRichPath
+import org.eclipse.core.resources.IWorkspaceRoot
 
 class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   import RichPath._
@@ -43,7 +42,7 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
 
     if (buildRequired) {
       val proguardDefaults = {
-        val pathToDefaultsFile = pluginDirectory / "proguard_cache_conf" / "proguard_defaults.conf"
+        val pathToDefaultsFile = pluginDirectory.get / "proguard_cache_conf" / "proguard_defaults.conf"
         RichFile.slurp(pathToDefaultsFile.toFile)
       }
 
@@ -58,22 +57,26 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
 
       logMsg("output folders are " + existingOutputFolders)
 
-      val processedClasspathEntries = for {
+      // classpath entry paths can be relative or absolute.  Absolute paths are usually
+      // external libraries.
+      val pathsToClasspathEntries = for {
         rawClasspathEntry <- javaProject.getRawClasspath if isCpeLibrary(rawClasspathEntry)
         relativePath <- NotNull(rawClasspathEntry.getPath, "getPath failed for " + rawClasspathEntry)
         libraryName <- NotNull(relativePath.lastSegment)
       } yield (relativePath, libraryName)
 
-      val libraryLocations: Array[IPath] = for {
-        (relativePath, libraryName) <- processedClasspathEntries if !isMinifiedLibraryName(libraryName)
-        member <- NotNull(getWorkspaceRoot.findMember(relativePath), "findMember failed for " + relativePath)
-        locationWithExistingJar <- NotNull(member.getLocation, "getLocation failed for " + member) if fileExists(locationWithExistingJar)
-      } yield locationWithExistingJar
+      val convertRelativePathsToLocations: PartialFunction[IPath, Option[IPath]] = {
+        case p if p.isAbsolute =>
+          Some(p)
+        case relativePath =>
+          for {
+            member <- NotNull(getWorkspaceRoot.findMember(relativePath), "findMember failed for " + relativePath)
+            // There can be classpath entries to nonexistant files, so filter on existance
+            locationWithExistingJar <- NotNull(member.getLocation, "getLocation failed for " + member) if fileExists(locationWithExistingJar)
+          } yield locationWithExistingJar
+      }
 
-      // Using asJavaMap because JRuby has magic that adds many Ruby Hash methods to 
-      // Java Map objects.
-      monitor.beginTask("Computing dependencies and running Proguard", 2)
-      monitor.worked(1)
+      val libraryLocations = pathsToClasspathEntries collect { case (path, jarname) if !isMinifiedLibraryName(jarname) => path } collect convertRelativePathsToLocations flatten
 
       implicit def convertIPathToString(p: IPath): String = p.toString
 
@@ -96,12 +99,15 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
         rubyCacheController.run_proguard andThen
         rubyCacheController.install_proguard_output)(params)
 
-      val classpathEntryForMinifedLibrary = processedClasspathEntries find { case (_, libraryName) => isMinifiedLibraryName(libraryName) }
-      if (classpathEntryForMinifedLibrary.isEmpty) {
-        val newEntry = JavaCore.newLibraryEntry(outputJar, null, null)
-        val newClasspath = javaProject.getRawClasspath ++ Iterable(newEntry)
-        javaProject.setRawClasspath(newClasspath, monitor)
-        logMsg("Added minified scala jar %s to classpath".format(outputJar))
+      logMsg("relativePathsAndLibraryNames is: " + (pathsToClasspathEntries collect { case (a, b) => a.toString + ", " + b.toString } mkString ", "))
+
+      pathsToClasspathEntries find { case (_, libraryName) => isMinifiedLibraryName(libraryName) } match {
+        case None =>
+          val newEntry = JavaCore.newLibraryEntry(outputJar, null, null)
+          val newClasspath = javaProject.getRawClasspath ++ Iterable(newEntry)
+          javaProject.setRawClasspath(newClasspath, monitor)
+          logMsg("Added minified scala jar %s to classpath".format(outputJar))
+        case Some(_) =>
       }
 
       Iterable(outputJar, confDir, cacheDir) foreach tellEclipsePathNeedsToBeRefreshed
@@ -166,29 +172,22 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
     javaProject.getResolvedClasspath(false) map { _.getPath }
   }
 
-  def getRawClasspathEntries = {
-  }
-
   def objToString[T](x: T) = x.toString
 
-  def getWorkspaceRoot = ResourcesPlugin.getWorkspace.getRoot
-  def rootDirectoryOfWorkspace = {
-    getWorkspaceRoot.getLocation
-  }
+  def getWorkspaceRoot: IWorkspaceRoot = ResourcesPlugin.getWorkspace.getRoot
+  def rootDirectoryOfWorkspace: IPath = getWorkspaceRoot.getLocation
 
-  val bundle = Platform.getBundle("com.restphone.androidproguardscala");
+  val platformBundle = Platform.getBundle("com.restphone.androidproguardscala");
 
-  def pluginDirectory = {
-    val result = for {
-      u <- NotNull(FileLocator.find(bundle, new Path("/"), null), "cannot find directory for bundle")
+  def pluginDirectory = 
+    for {
+      u <- NotNull(FileLocator.find(platformBundle, new Path("/"), null), "cannot find directory for bundle")
       filenameUrl <- NotNull(Platform.resolve(u), "Platform.resolve must not return null")
       f = new Path(filenameUrl.getFile)
     } yield f
-    result.get
-  }
 
   def logMsg(msg: String, status: Integer = IStatus.INFO) = {
-    val log = Platform.getLog(bundle);
+    val log = Platform.getLog(platformBundle);
     val s = new Status(status, pluginId, msg)
     log.log(s)
   }
@@ -209,21 +208,6 @@ class Activator extends org.eclipse.ui.plugin.AbstractUIPlugin {
   override def start(context: BundleContext) {
     super.start(context);
   }
-}
-
-class RichFile(f: File) {
-  def /(that: String) = new File(f, that)
-}
-
-object RichFile {
-  def slurp(f: File) = {
-    val s = scala.io.Source.fromFile(f)
-    val result = s.getLines.mkString("\n")
-    s.close()
-    result
-  }
-  def ensureDirExists(f: File) =
-    if (!f.exists) f.mkdir
 }
 
 class RichPath(p: IPath) {
