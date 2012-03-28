@@ -30,6 +30,6 @@
     <dependency
       org="com.google.guava"
       name="guava"
-      rev="11.0" />
+      rev="11.0.1" />
   </dependencies>
 </ivy-module>

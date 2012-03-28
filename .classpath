@@ -1,18 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
+	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry kind="src" path="src/main/java"/>
 	<classpathentry kind="src" path="lib_jruby"/>
 	<classpathentry kind="src" path="lib_scala"/>
 	<classpathentry kind="src" path="src/main/scala"/>
 	<classpathentry kind="src" path="lib_java"/>
-	<classpathentry exported="true" kind="lib" path="bin/"/>
 	<classpathentry exported="true" kind="lib" path="lib/asm-3.3.1.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/guava-11.0.jar" sourcepath="/Users/james/src/guava/guava/src"/>
+	<classpathentry exported="true" kind="lib" path="lib/proguard-base-4.6.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/guava-11.0.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/jruby-complete-1.6.5.1.jar"/>
-	<classpathentry kind="con" path="org.scala-ide.sdt.launching.SCALA_CONTAINER"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
-	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
-	<classpathentry kind="con" path="org.apache.ivyde.eclipse.cpcontainer.IVYDE_CONTAINER/?ivyXmlPath=ivy.xml&amp;confs=*"/>
-	<classpathentry kind="lib" path="lib/proguard-base-4.6.jar"/>
+	<classpathentry exported="true" kind="lib" path="bin" sourcepath="bin"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
