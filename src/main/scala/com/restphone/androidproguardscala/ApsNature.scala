@@ -9,26 +9,31 @@ import org.eclipse.core.resources.IProjectNature
 class AndroidProguardScalaNature extends IProjectNature {
   @BeanProperty var project: IProject = null
 
-  def desc = project.getDescription
-  def existingCommands = desc.getBuildSpec
+  def existingCommands = project.getDescription.getBuildSpec
   def builderNameMatches(x: ICommand) = x.getBuilderName == AndroidProguardScalaBuilder.BUILDER_ID
   def existingBuilder = existingCommands find builderNameMatches
 
   override def configure =
     existingBuilder getOrElse {
-      val command = desc.newCommand
+      val description = project.getDescription
+      val command = description.newCommand
       command.setBuilderName(AndroidProguardScalaBuilder.BUILDER_ID)
-      desc.setBuildSpec(existingCommands ++ Array(command))
-      project.setDescription(desc, null)
+      val builders = existingCommands ++ Array(command)
+      description.setBuildSpec(builders)
+      builders foreach { x => println("builder : " + x) }
+      project.setDescription(description, null)
     }
 
-  override def deconfigure =
+  override def deconfigure = {
+    existingCommands foreach { x => println("builder was : " + x) }
     existingBuilder foreach {
       _ =>
         val otherBuilders = existingCommands filterNot builderNameMatches
-        desc.setBuildSpec(otherBuilders)
-        project.setDescription(desc, null)
+        val description = project.getDescription
+        description.setBuildSpec(otherBuilders)
+        project.setDescription(description, null)
     }
+  }
 }
 
 object AndroidProguardScalaNature {
