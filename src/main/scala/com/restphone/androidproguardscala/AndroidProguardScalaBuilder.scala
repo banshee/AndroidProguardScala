@@ -147,7 +147,7 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   def rootDirectoryOfProject = convertResourceToFilesystemLocation(getProject)
   def cacheDir = rootDirectoryOfProject / "proguard_cache"
   def confDir = rootDirectoryOfProject / "proguard_cache_conf"
-  def libDirectory = rootDirectoryOfProject / "lib"
+  def libDirectory = rootDirectoryOfProject / "libs"
   def scalaProject = scala.tools.eclipse.ScalaProject(getProject)
 
   def isCpeLibrary(x: IClasspathEntry) = x.getEntryKind == IClasspathEntry.CPE_LIBRARY
