@@ -32,8 +32,6 @@ class ToggleNatureAction extends IObjectActionDelegate with IElementUpdater {
     selection = Some(s)
   }
 
-  //public abstract void updateElement(org.eclipse.ui.menus.UIElement arg0, java.util.Map arg1);
-
   override def updateElement(arg0: UIElement, arg1: java.util.Map[_, _]) = println("arg0: " + arg0 + " " + arg1)
 
   def setActivePart(a: IAction, target: IWorkbenchPart) = {}

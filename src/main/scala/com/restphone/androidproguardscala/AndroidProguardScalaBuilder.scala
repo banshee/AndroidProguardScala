@@ -1,7 +1,6 @@
 package com.restphone.androidproguardscala
 
 import java.io.File
-import java.net.URI
 
 import scala.Array.canBuildFrom
 import scala.Option.option2Iterable
@@ -9,7 +8,6 @@ import scala.Option.option2Iterable
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.IResourceDelta
-import org.eclipse.core.resources.IWorkspace
 import org.eclipse.core.resources.IWorkspaceRoot
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.resources.ResourcesPlugin
@@ -90,7 +88,7 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
         logMsg("cpe is " + rawClasspathEntry)
         logMsg("member is " + member)
         val result = member match {
-          case x: IResource => (new Path(x.getLocationURI.getPath), libraryName)
+          case x: IResource => (convertResourceToFilesystemLocation(x), libraryName)
           case _ => (relativePath, libraryName)
         }
         logMsg("result is " + result._1 + " @@ " + result._2)
@@ -146,7 +144,7 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
 
   override def clean(monitor: IProgressMonitor): Unit = rubyCacheController.clean_cache(cacheDir.toString)
 
-  def rootDirectoryOfProject = new Path(getProject.getLocationURI.getPath)
+  def rootDirectoryOfProject = convertResourceToFilesystemLocation(getProject)
   def cacheDir = rootDirectoryOfProject / "proguard_cache"
   def confDir = rootDirectoryOfProject / "proguard_cache_conf"
   def libDirectory = rootDirectoryOfProject / "lib"
@@ -154,6 +152,8 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
 
   def isCpeLibrary(x: IClasspathEntry) = x.getEntryKind == IClasspathEntry.CPE_LIBRARY
   def isMinifiedLibraryName(s: String) = s == AndroidProguardScalaBuilder.minifiedScalaLibraryName
+
+  def convertResourceToFilesystemLocation(resource: IResource) = new Path(resource.getLocationURI.getPath)
 
   def existingOutputFolders = {
     // The IDE may have decided that some paths are the destination for class files without actually
@@ -167,7 +167,7 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
     def logError(msg: String) = AndroidProguardScalaBuilder.this.logMsg(msg, IStatus.ERROR)
   }
 
-  val lastSegmentIsString = (s: String) => (p: IPath) => p.lastSegment.equals(s)
+  private val lastSegmentIsString = (s: String) => (p: IPath) => p.lastSegment.equals(s)
   val lastSegmentIsScalaLibrary = lastSegmentIsString("scala-library.jar")
   val lastSegmentIsAndroidLibrary = lastSegmentIsString("android.jar")
   val fileExists = (p: IPath) => p.toFile.exists
@@ -229,21 +229,11 @@ class Activator extends org.eclipse.ui.plugin.AbstractUIPlugin {
   }
 }
 
-object EclipseLocation {
-  def fromWorkspaceAndPath(w: IWorkspace, path: IPath) = new EclipseLocation(w, path)
+class RichPath(p: IPath) {
+  def /(that: String) = p.append(that)
 }
 
-class EclipseLocation(workspace: IWorkspace, path: IPath) {
-  val uris: Seq[URI] =
-    for {
-      w <- NotNull(workspace).toSeq
-      workspaceRoot <- NotNull(w.getRoot).toSeq
-      resource <- workspaceRoot.findFilesForLocation(path)
-    } yield resource.getLocationURI
-
-  val locations: Seq[FilesystemLocation] = uris map { _.getPath } map FilesystemLocation.apply
-}
-
-case class FilesystemLocation(path: String) {
-  override def toString = path
+object RichPath {
+  implicit def toRichPath(p: IPath): RichPath = new RichPath(p)
+  def ensureDirExists(p: IPath) = RichFile.ensureDirExists(p.toFile)
 }
