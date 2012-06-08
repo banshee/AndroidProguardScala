@@ -1,0 +1,16 @@
+rule scala.actors com.restphone.scalasubdir.@0
+rule scala.annotation com.restphone.scalasubdir.@0
+rule scala.collection com.restphone.scalasubdir.@0
+rule scala.compat com.restphone.scalasubdir.@0
+rule scala.concurrent com.restphone.scalasubdir.@0
+rule scala.io com.restphone.scalasubdir.@0
+rule scala.math com.restphone.scalasubdir.@0
+rule scala.parallel com.restphone.scalasubdir.@0
+rule scala.ref com.restphone.scalasubdir.@0
+rule scala.reflect com.restphone.scalasubdir.@0
+rule scala.runtime com.restphone.scalasubdir.@0
+rule scala.sys com.restphone.scalasubdir.@0
+rule scala.testing com.restphone.scalasubdir.@0
+rule scala.text com.restphone.scalasubdir.@0
+rule scala.util com.restphone.scalasubdir.@0
+rule scala.xml com.restphone.scalasubdir.@0
