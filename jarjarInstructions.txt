@@ -1,0 +1,1 @@
+jar tf /Users/james/src/finagle/project/boot/scala-2.9.1/lib/scala-library.jar | sed -e "s/\(.*\).class$/\1 com.restphonepack.\1/" | grep -v -e "\/$" | sed -e "s/\//\./g" | less > lib

@@ -2,9 +2,6 @@ package com.restphone.androidproguardscala
 
 import java.io.File
 
-import scala.Array.canBuildFrom
-import scala.Option.option2Iterable
-
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.IResourceDelta
@@ -148,7 +145,7 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   def cacheDir = rootDirectoryOfProject / "proguard_cache"
   def confDir = rootDirectoryOfProject / "proguard_cache_conf"
   def libDirectory = rootDirectoryOfProject / "libs"
-  def scalaProject = scala.tools.eclipse.ScalaProject(getProject)
+  //  def scalaProject = scala.tools.eclipse.ScalaProject(getProject)
 
   def isCpeLibrary(x: IClasspathEntry) = x.getEntryKind == IClasspathEntry.CPE_LIBRARY
   def isMinifiedLibraryName(s: String) = s == AndroidProguardScalaBuilder.minifiedScalaLibraryName
@@ -158,8 +155,9 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   def existingOutputFolders = {
     // The IDE may have decided that some paths are the destination for class files without actually
     // creating those directories.  Only reporting ones that exist already.
-    val outputFoldersAsIPaths = scalaProject.sourceOutputFolders.map { case (src, dest) => dest.getLocation }
-    outputFoldersAsIPaths filter fileExists toSet
+    val outputFoldersAsIPaths = ProjectUtilities.outputFolders(getProject)
+    import scala.collection.JavaConversions._
+    asList(outputFoldersAsIPaths) filter fileExists toSet
   }
 
   def logger() = new ProvidesLogging {
