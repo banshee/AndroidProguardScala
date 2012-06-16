@@ -47,6 +47,7 @@ class ToggleNatureAction extends IObjectActionDelegate with IElementUpdater {
       }
       description.setNatureIds(newNatures)
       project.setDescription(description, null)
+      moveScalaClasspathContainersEarlyInTheClasspath(project)
       project.touch(null)
     }
   }
