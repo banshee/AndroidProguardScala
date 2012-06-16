@@ -117,7 +117,7 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
         proguardProcessedConfFile = proguardProcessedConfFile,
         cachedJar = cachedJar,
         outputJar = outputJar,
-        scalaLibraryJar = scalaLibraryJar.toString,
+        scalaLibraryJar = scalaLibraryJar.get.getAbsolutePath,
         classFiles = (existingOutputFolders map convertIPathToString).toArray,
         libraryJars = (libraryLocations ++ List(pathToAndroidJar) map convertIPathToString),
         proguardDefaults = proguardDefaults,
