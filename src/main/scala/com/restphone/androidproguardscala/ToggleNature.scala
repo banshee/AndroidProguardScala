@@ -14,6 +14,7 @@ import org.eclipse.jface.viewers.IStructuredSelection
 import scala.collection.JavaConversions._
 import org.eclipse.ui.commands.IElementUpdater
 import org.eclipse.ui.menus.UIElement
+import org.eclipse.jdt.core.JavaCore
 
 class ToggleNatureAction extends IObjectActionDelegate with IElementUpdater {
   var selection: Option[ISelection] = None
@@ -24,7 +25,7 @@ class ToggleNatureAction extends IObjectActionDelegate with IElementUpdater {
         s.iterator collect {
           case p: IProject => p
           case a: IAdaptable => a.getAdapter(classOf[IProject]).asInstanceOf[IProject]
-        } foreach toggleNature
+        } foreach { toggleNature(_) }
     }
   }
 
@@ -37,16 +38,31 @@ class ToggleNatureAction extends IObjectActionDelegate with IElementUpdater {
   def setActivePart(a: IAction, target: IWorkbenchPart) = {}
 
   def toggleNature(project: IProject) = {
-    val description = project.getDescription
-    val natures = description.getNatureIds
-    val newNatures = natures find isApsNatureName match {
-      case Some(_) => natures filterNot isApsNatureName
-      case None => natures ++ Array(AndroidProguardScalaNature.NATURE_ID)
+    if (project.isOpen) {
+      val description = project.getDescription
+          val natures = description.getNatureIds
+          val newNatures = natures find isApsNatureName match {
+          case Some(_) => natures filterNot isApsNatureName
+          case None => natures ++ Array(AndroidProguardScalaNature.NATURE_ID)
+      }
+      description.setNatureIds(newNatures)
+      project.setDescription(description, null)
+      project.touch(null)
     }
-    description.setNatureIds(newNatures)
-    project.setDescription(description, null)
-    project.touch(null)
   }
+
+  def moveScalaClasspathContainersEarlyInTheClasspath(project: IProject): Unit = {
+    // Move the scala classpath containers to be early in the classpath.  They have to be before the Android
+    // classpath container or the scala presentation compiler crashes.
+
+    // Yes, this is an ugly hack.
+
+    val (scalaCpes, nonScalaCpes) = javaProject(project).getRawClasspath partition { cpe => cpe.getPath.toString.contains("SCALA") }
+    val newClasspath = scalaCpes ++ nonScalaCpes
+    javaProject(project).setRawClasspath(newClasspath, null)
+  }
+
+  def javaProject(p: IProject) = JavaCore.create(p)
 
   def isApsNatureName(s: String) = s == AndroidProguardScalaNature.NATURE_ID
 }

@@ -35,6 +35,11 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   }
 
   override def build(kind: Int, args: java.util.Map[String, String], monitor: IProgressMonitor): Array[IProject] = {
+    if (scalaLibraryJar.isEmpty) {
+      logMsg("Cannot find scala-library.jar.  Does this project have scala nature?  (If it does have scala nature, please report this bug.)", IStatus.ERROR)
+      return Array.empty
+    }
+
     val buildRequired = {
       val affected_paths = getDelta(getProject) match {
         case x: IResourceDelta => x.getAffectedChildren map { _.getFullPath }
@@ -74,6 +79,13 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
       //
       // Moral: NEVER trust an IPath.  Having just an IPath is utterly useless.
 
+      //      for {
+      //        p <- javaProject.getRawClasspath
+      //      } yield {
+      //        logMsg("px is " + p.toString)
+      //        logMsg("px path is " + p.getPath.toString)
+      //      }
+
       val pathsToClasspathEntries = for {
         rawClasspathEntry <- javaProject.getRawClasspath if isCpeLibrary(rawClasspathEntry)
         relativePath <- NotNull(rawClasspathEntry.getPath, "getPath failed for " + rawClasspathEntry)
@@ -92,9 +104,9 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
         result
       }
 
-      val libraryLocations = pathsToClasspathEntries collect { case (path, jarname) if !isMinifiedLibraryName(jarname) => path }
-
       implicit def convertIPathToString(p: IPath): String = p.toString
+
+      val libraryLocations = pathsToClasspathEntries collect { case (path, jarname) if !isMinifiedLibraryName(jarname) => path }
 
       val params = new ProguardCacheParameters(
         cacheDir = cacheDir,
@@ -116,16 +128,6 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
         rubyCacheController.install_proguard_output)(params)
 
       logMsg("relativePathsAndLibraryNames is: " + (pathsToClasspathEntries collect { case (a, b) => a.toString + ", " + b.toString } mkString ", "))
-
-      // ensureMinifiedLibraryIsOnClasspath
-      pathsToClasspathEntries find { case (_, libraryName) => isMinifiedLibraryName(libraryName) } match {
-        case None =>
-          val newEntry = JavaCore.newLibraryEntry(outputJar, null, null)
-          val newClasspath = javaProject.getRawClasspath ++ Iterable(newEntry)
-          javaProject.setRawClasspath(newClasspath, monitor)
-          logMsg("Added minified scala jar %s to classpath".format(outputJar))
-        case Some(_) =>
-      }
 
       Iterable(outputJar, confDir, cacheDir) foreach tellEclipsePathNeedsToBeRefreshed
     }
@@ -170,9 +172,9 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   val lastSegmentIsAndroidLibrary = lastSegmentIsString("android.jar")
   val fileExists = (p: IPath) => p.toFile.exists
 
-  def scalaLibraryJar: File = {
+  def scalaLibraryJar: Option[File] = {
     val entry = getResolvedClasspathEntries filter lastSegmentIsScalaLibrary find fileExists
-    entry map { f => new java.io.File(f.toString) } getOrElse null
+    entry map { f => new java.io.File(f.toString) }
   }
 
   def pathToAndroidJar: IPath = {
