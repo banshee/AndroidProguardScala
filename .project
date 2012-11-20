@@ -36,27 +36,13 @@
 		<nature>org.eclipse.pde.PluginNature</nature>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 		<nature>org.eclipse.pde.api.tools.apiAnalysisNature</nature>
+		<nature>org.apache.ivyde.eclipse.ivynature</nature>
 	</natures>
 	<linkedResources>
 		<link>
 			<name>.ivy2</name>
 			<type>2</type>
-			<location>/Users/james/.ivy2</location>
-		</link>
-		<link>
-			<name>lib_java</name>
-			<type>2</type>
-			<locationURI>WORKSPACE_LOC/AndroidProguardScalaLib/src/main/java</locationURI>
-		</link>
-		<link>
-			<name>lib_jruby</name>
-			<type>2</type>
-			<locationURI>WORKSPACE_LOC/AndroidProguardScalaLib/src/main/jruby</locationURI>
-		</link>
-		<link>
-			<name>lib_scala</name>
-			<type>2</type>
-			<locationURI>WORKSPACE_LOC/AndroidProguardScalaLib/src/main/scala</locationURI>
+			<location>C:/Users/james/.ivy2</location>
 		</link>
 	</linkedResources>
 </projectDescription>

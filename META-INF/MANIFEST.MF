@@ -6,9 +6,7 @@ Bundle-Version: 0.0.41.qualifier
 Require-Bundle: org.eclipse.core.resources,
  org.eclipse.core.runtime,
  org.eclipse.ui,
- org.eclipse.jdt.core;bundle-version="3.6.2",
- org.scala-ide.sdt.core;bundle-version="2.0.0",
- org.scala-ide.scala.library;bundle-version="2.9.1"
+ org.eclipse.jdt.core;bundle-version="3.6.2"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Export-Package: com.restphone.androidproguardscala
 Bundle-ClassPath: lib/scala-library-after-jarjar.jar,

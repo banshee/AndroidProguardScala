@@ -20,16 +20,20 @@
   </info>
   <dependencies>
     <dependency
-      org="asm"
-      name="asm-commons"
-      rev="3.3.1" />
+      org="org.ow2.asm"
+      name="asm"
+      rev="4.0" />
     <dependency
       org="net.sf.proguard"
       name="proguard-base"
-      rev="4.6" />
+      rev="4.8" />
     <dependency
       org="com.google.guava"
       name="guava"
-      rev="11.0.1" />
-  </dependencies>
+      rev="13.0.1" />
+    <dependency
+      org="com.restphone"
+      name="jartender_2.10"
+      rev="0.2-SNAPSHOT" />
+    </dependencies>
 </ivy-module>

@@ -1,7 +1,6 @@
 package com.restphone.androidproguardscala
 
 import java.io.File
-
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.IResourceDelta
@@ -18,8 +17,8 @@ import org.eclipse.core.runtime.Status
 import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.jdt.core.JavaCore
 import org.osgi.framework.BundleContext
-
 import com.restphone.androidproguardscala.RichPath.toRichPath
+import org.eclipse.jdt.internal.core.JavaProject
 
 class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   import RichPath._
@@ -79,13 +78,6 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
       //
       // Moral: NEVER trust an IPath.  Having just an IPath is utterly useless.
 
-      //      for {
-      //        p <- javaProject.getRawClasspath
-      //      } yield {
-      //        logMsg("px is " + p.toString)
-      //        logMsg("px path is " + p.getPath.toString)
-      //      }
-
       val pathsToClasspathEntries = for {
         rawClasspathEntry <- javaProject.getRawClasspath if isCpeLibrary(rawClasspathEntry)
         relativePath <- NotNull(rawClasspathEntry.getPath, "getPath failed for " + rawClasspathEntry)
@@ -123,9 +115,9 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
         proguardDefaults = proguardDefaults,
         logger = logger)
 
-      ((rubyCacheController.build_proguard_dependency_files _) andThen
-        rubyCacheController.run_proguard andThen
-        rubyCacheController.install_proguard_output)(params)
+      rubyCacheController.build_proguard_dependency_files(params)
+      rubyCacheController.run_proguard(params)
+      rubyCacheController.install_proguard_output(params)
 
       logMsg("relativePathsAndLibraryNames is: " + (pathsToClasspathEntries collect { case (a, b) => a.toString + ", " + b.toString } mkString ", "))
 
@@ -139,7 +131,7 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
     getProject.getFile(p).refreshLocal(IResource.DEPTH_INFINITE, null)
   }
 
-  lazy val rubyCacheController = ProguardCacheBuilder.buildCacheController(pluginDirectory.toString)
+  lazy val rubyCacheController = ProguardCacheController.buildCacheController(pluginDirectory.toString)
 
   override def clean(monitor: IProgressMonitor): Unit = rubyCacheController.clean_cache(cacheDir.toString)
 
@@ -157,9 +149,9 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   def existingOutputFolders = {
     // The IDE may have decided that some paths are the destination for class files without actually
     // creating those directories.  Only reporting ones that exist already.
-    val outputFoldersAsIPaths = ProjectUtilities.outputFolders(getProject)
+    val outputFoldersAsIPaths = ProjectUtilities.outputFolders(javaProject)
     import scala.collection.JavaConversions._
-    asList(outputFoldersAsIPaths) filter fileExists toSet
+    outputFoldersAsIPaths filter fileExists toSet
   }
 
   def logger() = new ProvidesLogging {
