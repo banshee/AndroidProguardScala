@@ -1,3 +1,5 @@
+java -jar /Users/james/backupEclipseIndigo/plugins/org.apache.ivy.eclipse.ant_2.2.0.final_20100923230623/ivy.jar -ivy ivy.xml  -settings ../ivysettings.xml -retrieve "lib/[module]-[type]-[artifact]-[revision].[ext]" ; rm lib/*source* ; rm lib/*javadoc* ; ls -l lib
+
 # Run all classfiles in bin directory through jarjar to move scala.* to com.restphone.scala.*
 tmpjar1=/tmp/jar1.jar
 tmpjar2=/tmp/jar2.jar
