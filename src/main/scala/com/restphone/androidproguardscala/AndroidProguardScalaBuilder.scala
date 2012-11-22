@@ -19,41 +19,48 @@ import org.eclipse.jdt.core.JavaCore
 import org.osgi.framework.BundleContext
 import com.restphone.androidproguardscala.RichPath.toRichPath
 import org.eclipse.jdt.internal.core.JavaProject
+import scalaz._
+import Scalaz._
 
 class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   import RichPath._
   import RichFile._
 
-  def buildArtifactsRequireRebuild(xs: Stream[IPath]): Boolean = {
-    def pathIsBuildArtifact(p: IPath) = p.lastSegment.startsWith("proguard_")
-    xs match {
-      case h #:: Stream.Empty if (pathIsBuildArtifact(h)) => false
-      case h #:: t if (pathIsBuildArtifact(h)) => buildArtifactsRequireRebuild(t)
-      case _ => true
-    }
+  def buildPatternMatch[T]( fn: T => Boolean ) = new Object {
+    def unapply[U <% T]( x: U ) = if ( fn( x ) ) some( x ) else none
   }
 
-  override def build(kind: Int, args: java.util.Map[String, String], monitor: IProgressMonitor): Array[IProject] = {
-    if (scalaLibraryJar.isEmpty) {
-      logMsg("Cannot find scala-library.jar.  Does this project have scala nature?  (If it does have scala nature, please report this bug.)", IStatus.ERROR)
+  override def build( kind: Int, args: java.util.Map[String, String], monitor: IProgressMonitor ): Array[IProject] = {
+    if ( scalaLibraryJar.isEmpty ) {
+      logMsg( "Cannot find scala-library.jar.  Does this project have scala nature?  (If it does have scala nature, please report this bug.)", IStatus.ERROR )
       return Array.empty
     }
 
     val buildRequired = {
-      val affected_paths = getDelta(getProject) match {
+      val pathIsBuildArtifact = buildPatternMatch[IPath]( _.lastSegment.startsWith( "proguard_" ) )
+      def buildArtifactsRequireRebuild( xs: Stream[IPath] ): Boolean = {
+        xs match {
+          case pathIsBuildArtifact( h ) #:: Stream.Empty => false
+          case pathIsBuildArtifact( h ) #:: t => buildArtifactsRequireRebuild( t )
+          case _ => true
+        }
+      }
+
+      val affected_paths = getDelta( getProject ) match {
         case x: IResourceDelta => x.getAffectedChildren map { _.getFullPath }
         case null => Array.empty[IPath]
       }
-      buildArtifactsRequireRebuild(affected_paths.toStream)
+      
+      buildArtifactsRequireRebuild( affected_paths.toStream )
     }
 
-    if (buildRequired) {
+    if ( buildRequired ) {
       val proguardDefaults = {
         val pathToDefaultsFile = pluginDirectory.get / "proguard_cache_conf" / "proguard_defaults.conf"
-        RichFile.slurp(pathToDefaultsFile.toFile)
+        RichFile.slurp( pathToDefaultsFile.toFile )
       }
 
-      Seq(cacheDir, confDir, libDirectory) foreach RichPath.ensureDirExists
+      Seq( cacheDir, confDir, libDirectory ) foreach RichPath.ensureDirExists
 
       val proguardProcessedConfFile = confDir / "proguard_postprocessed.conf"
       val proguardAdditionsFile = confDir / "proguard_additions.conf"
@@ -62,7 +69,7 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
 
       val outputJar = rootDirectoryOfProject / "libs" / AndroidProguardScalaBuilder.minifiedScalaLibraryName
 
-      logMsg("output folders are " + existingOutputFolders)
+      logMsg( "output folders are " + existingOutputFolders )
 
       // classpath entry paths can be relative or absolute.  Absolute paths are usually
       // external libraries.
@@ -79,26 +86,24 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
       // Moral: NEVER trust an IPath.  Having just an IPath is utterly useless.
 
       val pathsToClasspathEntries = for {
-        rawClasspathEntry <- javaProject.getRawClasspath if isCpeLibrary(rawClasspathEntry)
-        relativePath <- NotNull(rawClasspathEntry.getPath, "getPath failed for " + rawClasspathEntry)
-        libraryName <- NotNull(relativePath.lastSegment)
-        member = getWorkspaceRoot.findMember(relativePath)
+        rawClasspathEntry <- javaProject.getRawClasspath if isCpeLibrary( rawClasspathEntry )
+        relativePath <- NotNull( rawClasspathEntry.getPath, "getPath failed for " + rawClasspathEntry )
+        libraryName <- NotNull( relativePath.lastSegment )
+        member = getWorkspaceRoot.findMember( relativePath )
       } yield {
-        logMsg("**** paths are " + relativePath + " " + relativePath.getClass)
-        logMsg("paths are " + libraryName)
-        logMsg("cpe is " + rawClasspathEntry)
-        logMsg("member is " + member)
+        // A member can be one of two things: an IResource, in which case
+        // we know how to convert it to a path, or something that we know nothing
+        // about, in which case we'll just use the path we get from rawClasspathEntry.getPath.
         val result = member match {
-          case x: IResource => (convertResourceToFilesystemLocation(x), libraryName)
-          case _ => (relativePath, libraryName)
+          case x: IResource => ( convertResourceToFilesystemLocation( x ), libraryName )
+          case _ => ( relativePath, libraryName )
         }
-        logMsg("result is " + result._1 + " @@ " + result._2)
         result
       }
 
-      implicit def convertIPathToString(p: IPath): String = p.toString
+      implicit def convertIPathToString( p: IPath ): String = p.toString
 
-      val libraryLocations = pathsToClasspathEntries collect { case (path, jarname) if !isMinifiedLibraryName(jarname) => path }
+      val libraryLocations = pathsToClasspathEntries collect { case ( path, jarname ) if !isMinifiedLibraryName( jarname ) => path }
 
       val params = new ProguardCacheParameters(
         cacheDir = cacheDir,
@@ -110,97 +115,97 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
         cachedJar = cachedJar,
         outputJar = outputJar,
         scalaLibraryJar = scalaLibraryJar.get.getAbsolutePath,
-        classFiles = (existingOutputFolders map convertIPathToString).toArray,
-        libraryJars = (libraryLocations ++ List(pathToAndroidJar) map convertIPathToString),
+        classFiles = ( existingOutputFolders map convertIPathToString ).toArray,
+        libraryJars = ( libraryLocations ++ List( pathToAndroidJar ) map convertIPathToString ),
         proguardDefaults = proguardDefaults,
-        logger = logger)
+        logger = logger )
 
-      rubyCacheController.build_proguard_dependency_files(params)
-      rubyCacheController.run_proguard(params)
-      rubyCacheController.install_proguard_output(params)
+      rubyCacheController.build_proguard_dependency_files( params )
+      rubyCacheController.run_proguard( params )
+      rubyCacheController.install_proguard_output( params )
 
-      logMsg("relativePathsAndLibraryNames is: " + (pathsToClasspathEntries collect { case (a, b) => a.toString + ", " + b.toString } mkString ", "))
+      logMsg( "relativePathsAndLibraryNames is: " + ( pathsToClasspathEntries collect { case ( a, b ) => a.toString + ", " + b.toString } mkString ", " ) )
 
-      Iterable(outputJar, confDir, cacheDir) foreach tellEclipsePathNeedsToBeRefreshed
+      Iterable( outputJar, confDir, cacheDir ) foreach tellEclipsePathNeedsToBeRefreshed
     }
 
     Array.empty
   }
 
-  def tellEclipsePathNeedsToBeRefreshed(p: IPath) = {
-    getProject.getFile(p).refreshLocal(IResource.DEPTH_INFINITE, null)
+  def tellEclipsePathNeedsToBeRefreshed( p: IPath ) = {
+    getProject.getFile( p ).refreshLocal( IResource.DEPTH_INFINITE, null )
   }
 
-  lazy val rubyCacheController = ProguardCacheController.buildCacheController(pluginDirectory.toString)
+  lazy val rubyCacheController = ProguardCacheController.buildCacheController( pluginDirectory.toString )
 
-  override def clean(monitor: IProgressMonitor): Unit = rubyCacheController.clean_cache(cacheDir.toString)
+  override def clean( monitor: IProgressMonitor ): Unit = rubyCacheController.clean_cache( cacheDir.toString )
 
-  def rootDirectoryOfProject = convertResourceToFilesystemLocation(getProject)
+  def rootDirectoryOfProject = convertResourceToFilesystemLocation( getProject )
   def cacheDir = rootDirectoryOfProject / "proguard_cache"
   def confDir = rootDirectoryOfProject / "proguard_cache_conf"
   def libDirectory = rootDirectoryOfProject / "libs"
   //  def scalaProject = scala.tools.eclipse.ScalaProject(getProject)
 
-  def isCpeLibrary(x: IClasspathEntry) = x.getEntryKind == IClasspathEntry.CPE_LIBRARY
-  def isMinifiedLibraryName(s: String) = s == AndroidProguardScalaBuilder.minifiedScalaLibraryName
+  def isCpeLibrary( x: IClasspathEntry ) = x.getEntryKind == IClasspathEntry.CPE_LIBRARY
+  def isMinifiedLibraryName( s: String ) = s == AndroidProguardScalaBuilder.minifiedScalaLibraryName
 
-  def convertResourceToFilesystemLocation(resource: IResource) = new Path(resource.getLocationURI.getPath)
+  def convertResourceToFilesystemLocation( resource: IResource ) = new Path( resource.getLocationURI.getPath )
 
   def existingOutputFolders = {
     // The IDE may have decided that some paths are the destination for class files without actually
     // creating those directories.  Only reporting ones that exist already.
-    val outputFoldersAsIPaths = ProjectUtilities.outputFolders(javaProject)
+    val outputFoldersAsIPaths = ProjectUtilities.outputFolders( javaProject )
     import scala.collection.JavaConversions._
     outputFoldersAsIPaths filter fileExists toSet
   }
 
   def logger() = new ProvidesLogging {
-    def logMsg(msg: String) = AndroidProguardScalaBuilder.this.logMsg(msg)
-    def logError(msg: String) = AndroidProguardScalaBuilder.this.logMsg(msg, IStatus.ERROR)
+    def logMsg( msg: String ) = AndroidProguardScalaBuilder.this.logMsg( msg )
+    def logError( msg: String ) = AndroidProguardScalaBuilder.this.logMsg( msg, IStatus.ERROR )
   }
 
-  private val lastSegmentIsString = (s: String) => (p: IPath) => p.lastSegment.equals(s)
-  val lastSegmentIsScalaLibrary = lastSegmentIsString("scala-library.jar")
-  val lastSegmentIsAndroidLibrary = lastSegmentIsString("android.jar")
-  val fileExists = (p: IPath) => p.toFile.exists
+  private val lastSegmentIsString = ( s: String ) => ( p: IPath ) => p.lastSegment.equals( s )
+  val lastSegmentIsScalaLibrary = lastSegmentIsString( "scala-library.jar" )
+  val lastSegmentIsAndroidLibrary = lastSegmentIsString( "android.jar" )
+  val fileExists = ( p: IPath ) => p.toFile.exists
 
   def scalaLibraryJar: Option[File] = {
     val entry = getResolvedClasspathEntries filter lastSegmentIsScalaLibrary find fileExists
-    entry map { f => new java.io.File(f.toString) }
+    entry map { f => new java.io.File( f.toString ) }
   }
 
   def pathToAndroidJar: IPath = {
     val entry = getResolvedClasspathEntries filter lastSegmentIsAndroidLibrary find fileExists
-    if (entry.isDefined) entry.get
-    else throw new RuntimeException("cannot find android library in " + getResolvedClasspathEntries)
+    if ( entry.isDefined ) entry.get
+    else throw new RuntimeException( "cannot find android library in " + getResolvedClasspathEntries )
   }
 
-  lazy val javaProject = JavaCore.create(getProject)
+  lazy val javaProject = JavaCore.create( getProject )
 
   def getResolvedClasspathEntries() = {
-    javaProject.getResolvedClasspath(false) map { _.getPath }
+    javaProject.getResolvedClasspath( false ) map { _.getPath }
   }
 
-  def objToString[T](x: T) = x.toString
+  def objToString[T]( x: T ) = x.toString
 
   def getWorkspaceRoot: IWorkspaceRoot = ResourcesPlugin.getWorkspace.getRoot
   def rootDirectoryOfWorkspace: IPath = getWorkspaceRoot.getLocation
 
-  val platformBundle = Platform.getBundle("com.restphone.androidproguardscala");
+  val platformBundle = Platform.getBundle( "com.restphone.androidproguardscala" );
 
   // This seems like a hack, but it's apparently the right thing to do to find the plugin
   // directory.
   def pluginDirectory =
     for {
-      u <- NotNull(FileLocator.find(platformBundle, new Path("/"), null), "cannot find directory for bundle")
-      filenameUrl <- NotNull(Platform.resolve(u), "Platform.resolve must not return null")
-      f = new Path(filenameUrl.getFile)
+      u <- NotNull( FileLocator.find( platformBundle, new Path( "/" ), null ), "cannot find directory for bundle" )
+      filenameUrl <- NotNull( FileLocator.resolve( u ), "FileLocator.resolve must not return null" )
+      f = new Path( filenameUrl.getFile )
     } yield f
 
-  def logMsg(msg: String, status: Integer = IStatus.INFO) = {
-    val log = Platform.getLog(platformBundle);
-    val s = new Status(status, pluginId, msg)
-    log.log(s)
+  def logMsg( msg: String, status: Integer = IStatus.INFO ) = {
+    val log = Platform.getLog( platformBundle );
+    val s = new Status( status, pluginId, msg )
+    log.log( s )
   }
 
   val pluginId = "com.restphone.androidproguardscala"
@@ -212,20 +217,13 @@ object AndroidProguardScalaBuilder {
 }
 
 class Activator extends org.eclipse.ui.plugin.AbstractUIPlugin {
-  override def startup = {
-    super.startup();
-  }
-
-  override def start(context: BundleContext) {
-    super.start(context);
-  }
 }
 
-class RichPath(p: IPath) {
-  def /(that: String) = p.append(that)
+class RichPath( p: IPath ) {
+  def /( that: String ) = p.append( that )
 }
 
 object RichPath {
-  implicit def toRichPath(p: IPath): RichPath = new RichPath(p)
-  def ensureDirExists(p: IPath) = RichFile.ensureDirExists(p.toFile)
+  implicit def toRichPath( p: IPath ): RichPath = new RichPath( p )
+  def ensureDirExists( p: IPath ) = RichFile.ensureDirExists( p.toFile )
 }
