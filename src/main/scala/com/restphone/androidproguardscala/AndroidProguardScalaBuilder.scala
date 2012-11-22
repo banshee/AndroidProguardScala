@@ -50,7 +50,7 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
         case x: IResourceDelta => x.getAffectedChildren map { _.getFullPath }
         case null => Array.empty[IPath]
       }
-      
+
       buildArtifactsRequireRebuild( affected_paths.toStream )
     }
 
@@ -101,6 +101,16 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
         result
       }
 
+      logMsg( "classpath entries: " + pathsToClasspathEntries )
+      pathsToClasspathEntries foreach {
+        case ( p, l ) =>
+          logMsg( f"cpe: $p" )
+      }
+
+      javaProject.getRawClasspath foreach { p =>
+        logMsg( f"raw cpe: $p" )
+      }
+
       implicit def convertIPathToString( p: IPath ): String = p.toString
 
       val libraryLocations = pathsToClasspathEntries collect { case ( path, jarname ) if !isMinifiedLibraryName( jarname ) => path }
@@ -120,11 +130,9 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
         proguardDefaults = proguardDefaults,
         logger = logger )
 
-      rubyCacheController.build_proguard_dependency_files( params )
-      rubyCacheController.run_proguard( params )
-      rubyCacheController.install_proguard_output( params )
-
-      logMsg( "relativePathsAndLibraryNames is: " + ( pathsToClasspathEntries collect { case ( a, b ) => a.toString + ", " + b.toString } mkString ", " ) )
+      cacheController.build_proguard_dependency_files( params )
+      cacheController.run_proguard( params )
+      cacheController.install_proguard_output( params )
 
       Iterable( outputJar, confDir, cacheDir ) foreach tellEclipsePathNeedsToBeRefreshed
     }
@@ -136,9 +144,11 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
     getProject.getFile( p ).refreshLocal( IResource.DEPTH_INFINITE, null )
   }
 
-  lazy val rubyCacheController = ProguardCacheController.buildCacheController( pluginDirectory.toString )
+  // We can't create the cacheController until the plugin is started.  That happens
+  // after object initialization, so it's a lazy.
+  lazy val cacheController = ProguardCacheController.buildCacheController( pluginDirectory.toString )
 
-  override def clean( monitor: IProgressMonitor ): Unit = rubyCacheController.clean_cache( cacheDir.toString )
+  override def clean( monitor: IProgressMonitor ): Unit = cacheController.clean_cache( cacheDir.toString )
 
   def rootDirectoryOfProject = convertResourceToFilesystemLocation( getProject )
   def cacheDir = rootDirectoryOfProject / "proguard_cache"
