@@ -50,7 +50,7 @@ class ClasspathPreferences
       container ) {
   }
   object ClasspathEntryFieldEditor {
-    val choiceValues = Array( Array( "Input Jar", INPUTJAR ), Array( "Output Jar", OUTPUTJAR ), Array( "Ignore", IGNORE ) )
+    val choiceValues = Array( Array( "Input Jar", INPUTJAR ), Array( "Library Jar", LIBRARYJAR ), Array( "Ignore", IGNORE ) )
   }
 
   def createFieldEditorForClasspathItem( c: ClasspathEntryData, container: Composite ) = {

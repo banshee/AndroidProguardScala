@@ -36,12 +36,12 @@ case object IgnoredJar extends ClasspathEntryType
 object ClasspathEntryType {
   def convertStringToClasspathEntryType(s: String) = s match {
     case INPUTJAR => some(InputJar)
-    case OUTPUTJAR => some(OutputJar)
+    case LIBRARYJAR => some(OutputJar)
     case IGNORE => some(IgnoredJar)
     case _ => none[ClasspathEntryType]
   }
 
   val INPUTJAR = "inputjar"
-  val OUTPUTJAR = "outputjar"
+  val LIBRARYJAR = "libraryjar"
   val IGNORE = "ignore"
 }
