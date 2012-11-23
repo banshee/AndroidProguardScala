@@ -51,11 +51,10 @@ class ClasspathPreferences
     setPreferenceStore( storage.get )
   }
 
-  setDescription( "Fnord!" )
+  setDescription( "Choose the jar files that will be included in the shrunken final jar.  Input jars are included, library jars are passed to Proguard, and ignored files are ignored." )
 
   case class ClasspathEntryFieldEditor( displayLabel: String,
                                         fieldName: String,
-                                        value: ClasspathEntryType,
                                         container: Composite )
     extends RadioGroupFieldEditor( fieldName, displayLabel, 3, ClasspathEntryFieldEditor.choiceValues,
       container ) {
@@ -65,7 +64,7 @@ class ClasspathPreferences
   }
 
   def createFieldEditorForClasspathItem( c: ClasspathEntryData, container: Composite ) = {
-    ClasspathEntryFieldEditor( c.displayLabel, c.fieldName, c.value, container )
+    ClasspathEntryFieldEditor( c.displayLabel, c.fieldName, container )
   }
 
   override def createFieldEditors(): Unit = {

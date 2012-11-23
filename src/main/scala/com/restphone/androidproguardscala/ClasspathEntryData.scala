@@ -6,19 +6,29 @@ import org.eclipse.core.runtime.IStatus
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.core.runtime.Platform
 import org.eclipse.core.runtime.Status
+import org.eclipse.core.runtime.IPath
+import java.io.File
+import scalaz._
+import Scalaz._
 
-case class ClasspathEntryData( fieldName: String, displayLabel: String, value: ClasspathEntryType ) {
+case class ClasspathEntryData( fieldName: String, displayLabel: String ) {
 }
 object ClasspathEntryData {
-  def classpathEntries( p: IJavaProject ) = {
-    def classpathEntriesRecursive( acc: List[ClasspathEntryData], cpe: IClasspathEntry ) = {
+  private def splitPath( s: String ) = s.replace( '\\', '/' ).split( '/' ).toList
 
+  def convertPathToPreferenceName( p: IPath ) = {
+    splitPath( p.toOSString ).reverse match {
+      case a :: b :: t => some( f"jarfile_${a}_${b}" )
+      case a :: t => some( f"jarfile_x_${a}" )
+      case _ => None
     }
-    p.getResolvedClasspath( true ) foreach { entry =>
-      println(entry.toString)
-    }
-    p.getResolvedClasspath(true) map {x => ClasspathEntryData(x.getPath.toString, x.getPath.toString, InputJar)}
   }
+
+  def classpathEntries( p: IJavaProject ) =
+    for {
+      classpathentry <- p.getResolvedClasspath( true )
+      prefname <- convertPathToPreferenceName( classpathentry.getPath )
+    } yield ClasspathEntryData( prefname, classpathentry.getPath.toOSString )
 }
 
 sealed abstract class ClasspathEntryType
