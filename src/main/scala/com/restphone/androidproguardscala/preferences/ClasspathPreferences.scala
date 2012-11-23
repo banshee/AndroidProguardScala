@@ -1,24 +1,16 @@
 package com.restphone.androidproguardscala.preferences;
 
-import com.restphone.androidproguardscala._
-import org.eclipse.jface.preference._
-import org.eclipse.ui.IWorkbenchPreferencePage
-import org.eclipse.ui.IWorkbench
-import org.eclipse.core.runtime.preferences.IScopeContext
-import org.eclipse.core.resources.ProjectScope
-import org.eclipse.core.resources.ResourcesPlugin
-import org.eclipse.ui.dialogs.PropertyPage
-import org.eclipse.ui.IWorkbenchPropertyPage
-import org.eclipse.core.runtime.IAdaptable
 import org.eclipse.core.resources.IProject
-import org.eclipse.core.runtime.preferences.IEclipsePreferences
-import scalaz._
-import Scalaz._
-import org.eclipse.swt.widgets.Composite
-import org.eclipse.jdt.core.IJavaProject
+import org.eclipse.core.runtime.IAdaptable
 import org.eclipse.jdt.core.JavaCore
-import org.eclipse.jface.util.IPropertyChangeListener
-import org.eclipse.ui.preferences.ScopedPreferenceStore
+import org.eclipse.jface.preference.FieldEditorPreferencePage
+import org.eclipse.jface.preference.RadioGroupFieldEditor
+import org.eclipse.swt.widgets.Composite
+import org.eclipse.ui.IWorkbenchPropertyPage
+import com.restphone.androidproguardscala.ClasspathEntryType._
+import com.restphone.androidproguardscala.JartenderProjectPreferences
+import com.restphone.androidproguardscala.ClasspathEntryData
+import com.restphone.androidproguardscala.JavaProjectData
 
 /**
  * This class represents a preference page that
@@ -37,19 +29,17 @@ import org.eclipse.ui.preferences.ScopedPreferenceStore
 class ClasspathPreferences
   extends FieldEditorPreferencePage( FieldEditorPreferencePage.GRID )
   with IWorkbenchPropertyPage {
-  var element: IAdaptable = null
-  var storage: Option[ScopedPreferenceStore] = none
+  var project: IProject = null
+  var storage: JartenderProjectPreferences = null
   var classpathItemEditors: List[ClasspathEntryFieldEditor] = List.empty
 
-  def getElement: IAdaptable = element
-
   def setElement( e: IAdaptable ) = {
-    element = e
-    val projectScope: IScopeContext = new ProjectScope( element.asInstanceOf[IProject] )
-    val projectStore: ScopedPreferenceStore = new ScopedPreferenceStore( projectScope, "com.restphone.androidproguardscala" );
-    storage = some( projectStore )
-    setPreferenceStore( storage.get )
+    project = e.asInstanceOf[IProject]
+    storage = JartenderProjectPreferences( project )
+    setPreferenceStore( storage.asScopedPreferenceStore )
   }
+
+  override def getElement = project
 
   setDescription( "Choose the jar files that will be included in the shrunken final jar.  Input jars are included, library jars are passed to Proguard, and ignored files are ignored." )
 
@@ -60,7 +50,7 @@ class ClasspathPreferences
       container ) {
   }
   object ClasspathEntryFieldEditor {
-    val choiceValues = Array( Array( "Input Jar", "inputjar" ), Array( "Output Jar", "outputjar" ), Array( "Ignore", "ignore" ) )
+    val choiceValues = Array( Array( "Input Jar", INPUTJAR ), Array( "Output Jar", OUTPUTJAR ), Array( "Ignore", IGNORE ) )
   }
 
   def createFieldEditorForClasspathItem( c: ClasspathEntryData, container: Composite ) = {
@@ -68,11 +58,12 @@ class ClasspathPreferences
   }
 
   override def createFieldEditors(): Unit = {
-    val xs = ClasspathEntryData.classpathEntries( JavaCore.create( element.asInstanceOf[IProject] ) ).toList
+    val xs = JavaProjectData.classpathEntries( JavaCore.create( project ) ).toList
     classpathItemEditors = xs map { c => createFieldEditorForClasspathItem( c, getFieldEditorParent ) }
-    classpathItemEditors foreach { addField( _ ) }
     classpathItemEditors foreach { f =>
-      f.setPreferenceStore( storage.get )
+      storage.asScopedPreferenceStore.setDefault( f.fieldName, IGNORE )
+      addField( f )
+      f.setPreferenceStore( storage.asScopedPreferenceStore )
       f.setPage( this );
       f.load();
     }

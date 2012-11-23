@@ -10,25 +10,22 @@ import org.eclipse.core.runtime.IPath
 import java.io.File
 import scalaz._
 import Scalaz._
+import org.eclipse.jdt.core.IPackageFragmentRoot
 
 case class ClasspathEntryData( fieldName: String, displayLabel: String ) {
 }
 object ClasspathEntryData {
+  // This is hacky, but all we're looking for are the last two elements of the path,
+  // so it should work.
   private def splitPath( s: String ) = s.replace( '\\', '/' ).split( '/' ).toList
 
-  def convertPathToPreferenceName( p: IPath ) = {
-    splitPath( p.toOSString ).reverse match {
+  def convertPathToPreferenceName( pathAsString: String ) = {
+    splitPath( pathAsString ).reverse match {
       case a :: b :: t => some( f"jarfile_${a}_${b}" )
       case a :: t => some( f"jarfile_x_${a}" )
       case _ => None
     }
   }
-
-  def classpathEntries( p: IJavaProject ) =
-    for {
-      classpathentry <- p.getResolvedClasspath( true )
-      prefname <- convertPathToPreferenceName( classpathentry.getPath )
-    } yield ClasspathEntryData( prefname, classpathentry.getPath.toOSString )
 }
 
 sealed abstract class ClasspathEntryType
@@ -36,3 +33,15 @@ case object InputJar extends ClasspathEntryType
 case object OutputJar extends ClasspathEntryType
 case object IgnoredJar extends ClasspathEntryType
 
+object ClasspathEntryType {
+  def convertStringToClasspathEntryType(s: String) = s match {
+    case INPUTJAR => some(InputJar)
+    case OUTPUTJAR => some(OutputJar)
+    case IGNORE => some(IgnoredJar)
+    case _ => none[ClasspathEntryType]
+  }
+
+  val INPUTJAR = "inputjar"
+  val OUTPUTJAR = "outputjar"
+  val IGNORE = "ignore"
+}
