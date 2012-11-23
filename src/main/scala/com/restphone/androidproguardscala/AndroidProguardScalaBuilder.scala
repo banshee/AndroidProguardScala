@@ -226,9 +226,6 @@ object AndroidProguardScalaBuilder {
   val minifiedScalaLibraryName = "scala_library.min.jar"
 }
 
-class Activator extends org.eclipse.ui.plugin.AbstractUIPlugin {
-}
-
 class RichPath( p: IPath ) {
   def /( that: String ) = p.append( that )
 }

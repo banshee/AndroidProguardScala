@@ -77,5 +77,27 @@
             value="true">
       </persistent>
    </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            class="com.restphone.androidproguardscala.preferences.ClasspathPreferences"
+            id="com.restphone.androidproguardscala.preferences.ClasspathPreferences"
+            name="Classpath Entry Preferences">
+      </page>
+   </extension>
 
+   <extension id="preferences" point="org.eclipse.core.runtime.preferences" name="preferences">
+		<scope name="project" class="org.eclipse.core.internal.resources.ProjectPreferences"/>
+	</extension>
+	
+	<extension id="com.restphone.androidproguardscala.properties"
+		     name="AndroidProguardScala propx"
+	        point="org.eclipse.ui.propertyPages">
+	  <page objectClass="org.eclipse.core.resources.IProject"
+	        adaptable="true"
+	        name="AndroidProguardScala prop2" 
+	       class="com.restphone.androidproguardscala.preferences.ClasspathPreferences"
+	          id="com.restphone.androidproguardscala.preferences.ClasspathPreferencesid">
+	  </page>
+	</extension>
 </plugin>
