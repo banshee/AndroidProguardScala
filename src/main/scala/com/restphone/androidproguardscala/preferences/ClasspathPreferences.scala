@@ -78,10 +78,4 @@ class ClasspathPreferences
       f.load();
     }
   }
-
-//  override def performOk = {
-//    classpathItemEditors foreach { _.doStore }
-//    storage foreach { _.save() }
-//    true
-//  }
 }
