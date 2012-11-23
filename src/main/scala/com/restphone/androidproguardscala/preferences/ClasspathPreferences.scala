@@ -38,7 +38,7 @@ class ClasspathPreferences
   extends FieldEditorPreferencePage( FieldEditorPreferencePage.GRID )
   with IWorkbenchPropertyPage {
   var element: IAdaptable = null
-  var storage: Option[IEclipsePreferences] = none
+  var storage: Option[ScopedPreferenceStore] = none
   var classpathItemEditors: List[ClasspathEntryFieldEditor] = List.empty
 
   def getElement: IAdaptable = element
@@ -46,10 +46,9 @@ class ClasspathPreferences
   def setElement( e: IAdaptable ) = {
     element = e
     val projectScope: IScopeContext = new ProjectScope( element.asInstanceOf[IProject] )
-    val projectNode = projectScope.getNode( "com.restphone.androidproguardscala.preferences" );
-    val projectStore :ScopedPreferenceStore = new ScopedPreferenceStore(projectScope, "qualifier");
-
-    storage = some( projectNode )
+    val projectStore: ScopedPreferenceStore = new ScopedPreferenceStore( projectScope, "com.restphone.androidproguardscala" );
+    storage = some( projectStore )
+    setPreferenceStore( storage.get )
   }
 
   setDescription( "Fnord!" )
@@ -73,11 +72,16 @@ class ClasspathPreferences
     val xs = ClasspathEntryData.classpathEntries( JavaCore.create( element.asInstanceOf[IProject] ) ).toList
     classpathItemEditors = xs map { c => createFieldEditorForClasspathItem( c, getFieldEditorParent ) }
     classpathItemEditors foreach { addField( _ ) }
-    classpathItemEditors foreach { f => f.setPreferenceStore(store) }
+    classpathItemEditors foreach { f =>
+      f.setPreferenceStore( storage.get )
+      f.setPage( this );
+      f.load();
+    }
   }
 
-  override def performOk = {
-    storage foreach { _.flush }
-    true
-  }
+//  override def performOk = {
+//    classpathItemEditors foreach { _.doStore }
+//    storage foreach { _.save() }
+//    true
+//  }
 }
