@@ -12,7 +12,7 @@ import scalaz._
 import Scalaz._
 import org.eclipse.jdt.core.IPackageFragmentRoot
 
-case class ClasspathEntryData( fieldName: String, displayLabel: String ) {
+case class ClasspathEntryData( fieldName: String, fullPath: String ) {
 }
 object ClasspathEntryData {
   // This is hacky, but all we're looking for are the last two elements of the path,
@@ -30,13 +30,13 @@ object ClasspathEntryData {
 
 sealed abstract class ClasspathEntryType
 case object InputJar extends ClasspathEntryType
-case object OutputJar extends ClasspathEntryType
+case object LibraryJar extends ClasspathEntryType
 case object IgnoredJar extends ClasspathEntryType
 
 object ClasspathEntryType {
   def convertStringToClasspathEntryType(s: String) = s match {
     case INPUTJAR => some(InputJar)
-    case LIBRARYJAR => some(OutputJar)
+    case LIBRARYJAR => some(LibraryJar)
     case IGNORE => some(IgnoredJar)
     case _ => none[ClasspathEntryType]
   }

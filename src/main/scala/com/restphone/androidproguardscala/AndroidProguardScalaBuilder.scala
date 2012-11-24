@@ -31,11 +31,6 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   }
 
   override def build( kind: Int, args: java.util.Map[String, String], monitor: IProgressMonitor ): Array[IProject] = {
-    if ( scalaLibraryJar.isEmpty ) {
-      logMsg( "Cannot find scala-library.jar.  Does this project have scala nature?  (If it does have scala nature, please report this bug.)", IStatus.ERROR )
-      return Array.empty
-    }
-
     val buildRequired = {
       val pathIsBuildArtifact = buildPatternMatch[IPath]( _.lastSegment.startsWith( "proguard_" ) )
       def buildArtifactsRequireRebuild( xs: Stream[IPath] ): Boolean = {
@@ -62,6 +57,8 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
 
       Seq( cacheDir, confDir, libDirectory ) foreach RichPath.ensureDirExists
 
+      val projectdata = new JavaProjectData( javaProject )
+
       val proguardProcessedConfFile = confDir / "proguard_postprocessed.conf"
       val proguardAdditionsFile = confDir / "proguard_additions.conf"
 
@@ -69,64 +66,20 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
 
       val outputJar = rootDirectoryOfProject / "libs" / AndroidProguardScalaBuilder.minifiedScalaLibraryName
 
-      logMsg( "output folders are " + existingOutputFolders )
-
-      // classpath entry paths can be relative or absolute.  Absolute paths are usually
-      // external libraries.
-      //
-      // _WARNING_: The Eclipse idea of an "absolute" path has nothing to do with what most people think
-      // of as an absolute path.  In the world of Eclipse, an absolute path starts with a slash and
-      // contains the name of the project as the first element.
-      //
-      // IT HAS NOTHING TO DO WITH A PATH TO AN OPERATING SYSTEM FILENAME STARTING WITH /.
-      //
-      // Also, to be even more annoying, Eclipse will occasionally return operating sytem paths that start
-      // with a slash.
-      //
-      // Moral: NEVER trust an IPath.  Having just an IPath is utterly useless.
-
-      val pathsToClasspathEntries = for {
-        rawClasspathEntry <- javaProject.getRawClasspath if isCpeLibrary( rawClasspathEntry )
-        relativePath <- NotNull( rawClasspathEntry.getPath, "getPath failed for " + rawClasspathEntry )
-        libraryName <- NotNull( relativePath.lastSegment )
-        member = getWorkspaceRoot.findMember( relativePath )
-      } yield {
-        // A member can be one of two things: an IResource, in which case
-        // we know how to convert it to a path, or something that we know nothing
-        // about, in which case we'll just use the path we get from rawClasspathEntry.getPath.
-        val result = member match {
-          case x: IResource => ( convertResourceToFilesystemLocation( x ), libraryName )
-          case _ => ( relativePath, libraryName )
-        }
-        result
-      }
-
-      logMsg( "classpath entries: " + pathsToClasspathEntries )
-      pathsToClasspathEntries foreach {
-        case ( p, l ) =>
-          logMsg( f"cpe: $p" )
-      }
-
-      javaProject.getRawClasspath foreach { p =>
-        logMsg( f"raw cpe: $p" )
-      }
-
+      val existingOutputFolders = projectdata.outputDirectories
+      
       implicit def convertIPathToString( p: IPath ): String = p.toString
-
-      val libraryLocations = pathsToClasspathEntries collect { case ( path, jarname ) if !isMinifiedLibraryName( jarname ) => path }
 
       val params = new ProguardCacheParameters(
         cacheDir = cacheDir,
         confDir = confDir,
-        workspaceDir = rootDirectoryOfWorkspace,
-        projectDir = rootDirectoryOfProject,
         proguardAdditionsFile = proguardAdditionsFile,
         proguardProcessedConfFile = proguardProcessedConfFile,
         cachedJar = cachedJar,
+        inputJars = projectdata.inputJars map { _.fullPath },
+        libraryJars = projectdata.libraryJars map { _.fullPath },
         outputJar = outputJar,
-        scalaLibraryJar = scalaLibraryJar.get.getAbsolutePath,
-        classFiles = ( existingOutputFolders map convertIPathToString ).toArray,
-        libraryJars = ( libraryLocations ++ List( pathToAndroidJar ) map convertIPathToString ),
+        classFiles = existingOutputFolders.toArray,
         proguardDefaults = proguardDefaults,
         logger = logger )
 
@@ -161,14 +114,6 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
 
   def convertResourceToFilesystemLocation( resource: IResource ) = new Path( resource.getLocationURI.getPath )
 
-  def existingOutputFolders = {
-    // The IDE may have decided that some paths are the destination for class files without actually
-    // creating those directories.  Only reporting ones that exist already.
-    val outputFoldersAsIPaths = ProjectUtilities.outputFolders( javaProject )
-    import scala.collection.JavaConversions._
-    outputFoldersAsIPaths filter fileExists toSet
-  }
-
   def logger() = new ProvidesLogging {
     def logMsg( msg: String ) = AndroidProguardScalaBuilder.this.logMsg( msg )
     def logError( msg: String ) = AndroidProguardScalaBuilder.this.logMsg( msg, IStatus.ERROR )
@@ -179,22 +124,7 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   val lastSegmentIsAndroidLibrary = lastSegmentIsString( "android.jar" )
   val fileExists = ( p: IPath ) => p.toFile.exists
 
-  def scalaLibraryJar: Option[File] = {
-    val entry = getResolvedClasspathEntries filter lastSegmentIsScalaLibrary find fileExists
-    entry map { f => new java.io.File( f.toString ) }
-  }
-
-  def pathToAndroidJar: IPath = {
-    val entry = getResolvedClasspathEntries filter lastSegmentIsAndroidLibrary find fileExists
-    if ( entry.isDefined ) entry.get
-    else throw new RuntimeException( "cannot find android library in " + getResolvedClasspathEntries )
-  }
-
   lazy val javaProject = JavaCore.create( getProject )
-
-  def getResolvedClasspathEntries() = {
-    javaProject.getResolvedClasspath( false ) map { _.getPath }
-  }
 
   def objToString[T]( x: T ) = x.toString
 

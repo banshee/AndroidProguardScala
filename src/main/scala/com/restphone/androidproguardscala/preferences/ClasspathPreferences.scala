@@ -8,9 +8,9 @@ import org.eclipse.jface.preference.RadioGroupFieldEditor
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.ui.IWorkbenchPropertyPage
 import com.restphone.androidproguardscala.ClasspathEntryType._
-import com.restphone.androidproguardscala.JartenderProjectPreferences
 import com.restphone.androidproguardscala.ClasspathEntryData
 import com.restphone.androidproguardscala.JavaProjectData
+import org.eclipse.jdt.internal.core.JavaProject
 
 /**
  * This class represents a preference page that
@@ -29,17 +29,15 @@ import com.restphone.androidproguardscala.JavaProjectData
 class ClasspathPreferences
   extends FieldEditorPreferencePage( FieldEditorPreferencePage.GRID )
   with IWorkbenchPropertyPage {
-  var project: IProject = null
-  var storage: JartenderProjectPreferences = null
+  var projectData: JavaProjectData = null
   var classpathItemEditors: List[ClasspathEntryFieldEditor] = List.empty
 
   def setElement( e: IAdaptable ) = {
-    project = e.asInstanceOf[IProject]
-    storage = JartenderProjectPreferences( project )
-    setPreferenceStore( storage.asScopedPreferenceStore )
+    projectData = new JavaProjectData( JavaCore.create (e.asInstanceOf[IProject]))
+    setPreferenceStore( projectData.preferences )
   }
 
-  override def getElement = project
+  override def getElement = projectData.getProject
 
   setDescription( "Choose the jar files that will be included in the shrunken final jar.  Input jars are included, library jars are passed to Proguard, and ignored files are ignored." )
 
@@ -54,16 +52,16 @@ class ClasspathPreferences
   }
 
   def createFieldEditorForClasspathItem( c: ClasspathEntryData, container: Composite ) = {
-    ClasspathEntryFieldEditor( c.displayLabel, c.fieldName, container )
+    ClasspathEntryFieldEditor( c.fullPath, c.fieldName, container )
   }
 
   override def createFieldEditors(): Unit = {
-    val xs = JavaProjectData.classpathEntries( JavaCore.create( project ) ).toList
+    val xs = projectData.classpathEntries.toList
     classpathItemEditors = xs map { c => createFieldEditorForClasspathItem( c, getFieldEditorParent ) }
     classpathItemEditors foreach { f =>
-      storage.asScopedPreferenceStore.setDefault( f.fieldName, IGNORE )
+      projectData.preferences.setDefault( f.fieldName, IGNORE )
       addField( f )
-      f.setPreferenceStore( storage.asScopedPreferenceStore )
+      f.setPreferenceStore( projectData.preferences )
       f.setPage( this );
       f.load();
     }
