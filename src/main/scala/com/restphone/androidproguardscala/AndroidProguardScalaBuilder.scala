@@ -1,6 +1,10 @@
 package com.restphone.androidproguardscala
 
 import java.io.File
+import java.io.ObjectStreamException
+
+import scala.Array.canBuildFrom
+
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.IResourceDelta
@@ -16,15 +20,22 @@ import org.eclipse.core.runtime.Platform
 import org.eclipse.core.runtime.Status
 import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.jdt.core.JavaCore
-import org.osgi.framework.BundleContext
-import com.restphone.androidproguardscala.RichPath.toRichPath
-import org.eclipse.jdt.internal.core.JavaProject
-import scalaz._
-import Scalaz._
+
+import com.google.common.io.Files
+import com.restphone.jartender.CacheSystem
+import com.restphone.jartender.FileFailureValidation.FailureValidation
+import com.restphone.jartender.FileFailureValidation.FailureWithoutException
+import com.restphone.jartender.FileFailureValidation.convertExceptionToValidation
+import com.restphone.jartender.FileFailureValidation.stdExceptions
+import com.restphone.jartender.FileFailureValidation.validatedFile
+import com.restphone.jartender.JartenderCacheParameters
+import com.restphone.jartender.RichFile
+import com.restphone.jartender.SerializableUtilities
+
+import scalaz.Scalaz._
 
 class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   import RichPath._
-  import RichFile._
 
   def buildPatternMatch[T]( fn: T => Boolean ) = new Object {
     def unapply[U <% T]( x: U ) = if ( fn( x ) ) some( x ) else none
@@ -61,31 +72,62 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
 
       val proguardProcessedConfFile = confDir / "proguard_postprocessed.conf"
       val proguardAdditionsFile = confDir / "proguard_additions.conf"
-
       val cachedJar = cacheDir / "scala-library.CKSUM.jar"
-
       val outputJar = rootDirectoryOfProject / "libs" / AndroidProguardScalaBuilder.minifiedScalaLibraryName
-
       val existingOutputFolders = projectdata.outputDirectories
-      
+
       implicit def convertIPathToString( p: IPath ): String = p.toString
 
-      val params = new ProguardCacheParameters(
+      val jartenderParams = JartenderCacheParameters(
         cacheDir = cacheDir,
-        confDir = confDir,
-        proguardAdditionsFile = proguardAdditionsFile,
-        proguardProcessedConfFile = proguardProcessedConfFile,
-        cachedJar = cachedJar,
+        classFiles = existingOutputFolders.toList,
         inputJars = projectdata.inputJars map { _.fullPath },
-        libraryJars = projectdata.libraryJars map { _.fullPath },
-        outputJar = outputJar,
-        classFiles = existingOutputFolders.toArray,
-        proguardDefaults = proguardDefaults,
-        logger = logger )
+        libraryJars = projectdata.libraryJars map { _.fullPath } )
 
-      cacheController.build_proguard_dependency_files( params )
-      cacheController.run_proguard( params )
-      cacheController.install_proguard_output( params )
+      val proguardCacheParameters = new ProguardCacheParameters(
+        jartenderConfiguration = jartenderParams,
+        proguardAdditionsFile = proguardAdditionsFile,
+        proguardProcessedConfFile = proguardProcessedConfFile )
+
+      val cacheFile = new File( cacheDir / "cache.data" )
+
+      def readCacheSystemFromFile( f: File ) = {
+        val deserializeExceptions = classOf[ClassNotFoundException] :: classOf[ObjectStreamException] :: classOf[ClassCastException] :: stdExceptions
+        implicit val safeDeserialize = convertExceptionToValidation( deserializeExceptions )_
+
+        def bytesToCacheSystem( bytes: Array[Byte] ): FailureValidation[CacheSystem] =
+          for {
+            x <- safeDeserialize( "deserialize CacheSystem", none ) {
+              val obj: Option[CacheSystem] = SerializableUtilities.byteArrayToObject( bytes )
+              obj match {
+                case Some( v ) => v.success
+                case None => FailureWithoutException( "failed to get a cache system object from bytes" ).failureNel
+              }
+            }
+          } yield x
+
+        for {
+          existingFile <- validatedFile( f, "reading cache file" )
+          bytesFromCacheFile = Files.toByteArray( cacheFile )
+          result <- bytesToCacheSystem( bytesFromCacheFile )
+        } yield result
+      }
+
+      val result = for {
+        cacheSystem <- readCacheSystemFromFile( cacheFile ) ||| ( new CacheSystem ).success
+        runner = new ProguardRunner( cacheSystem )
+        shrinker = runner.createShrinker( proguardCacheParameters )
+        cacheEntry <- cacheSystem.execute( shrinker )
+        outputPath = cacheEntry.c.jarfilepath
+        outputJarFile <- cacheSystem.installOutputJar( new File( outputPath ), new File( outputJar.toString ) )
+      } yield {
+        val bytesForCache = SerializableUtilities.convertToByteArray( cacheSystem )
+        val lnx = bytesForCache.length
+        Files.write( bytesForCache, cacheFile )
+        cacheEntry
+      }
+
+      logMsg( "cache run: " + result )
 
       Iterable( outputJar, confDir, cacheDir ) foreach tellEclipsePathNeedsToBeRefreshed
     }

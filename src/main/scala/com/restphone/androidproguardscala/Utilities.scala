@@ -13,14 +13,3 @@ object NotNull {
     }
   }
 }
-
-object RichFile {
-  def slurp(f: File) = {
-    val s = scala.io.Source.fromFile(f)
-    val result = s.getLines.mkString("\n")
-    s.close()
-    result
-  }
-  def ensureDirExists(f: File) =
-    if (!f.exists) f.mkdir
-}

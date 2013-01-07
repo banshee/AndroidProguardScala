@@ -23,8 +23,8 @@ class JavaProjectData( project: IJavaProject ) {
 
   def outputDirectories = {
     val cpes = project.getResolvedClasspath( true ) filter { _.getEntryKind == IClasspathEntry.CPE_SOURCE } filter { _.getContentKind == IPackageFragmentRoot.K_SOURCE }
-    val specificOutputLocations = cpes flatMap { c => Option(c.getOutputLocation) }
-    (project.getOutputLocation :: specificOutputLocations.toList).toSet map convertPathToFilesystemPath 
+    val specificOutputLocations = cpes flatMap { c => Option( c.getOutputLocation ) }
+    ( project.getOutputLocation :: specificOutputLocations.toList ).toSet map convertPathToFilesystemPath
   }
 
   lazy val preferences = {
@@ -36,7 +36,7 @@ class JavaProjectData( project: IJavaProject ) {
   def libraryJars = jarsOfType( LibraryJar )
 
   private def jarsOfType( t: ClasspathEntryType ) = {
-    classpathEntries filter { c => stateForClasspathEntryData( c ) == t }
+    classpathEntries filter { stateForClasspathEntryData( _ ) == t } toList
   }
 
   private def stateForClasspathEntryData( c: ClasspathEntryData ): ClasspathEntryType = {
@@ -45,6 +45,6 @@ class JavaProjectData( project: IJavaProject ) {
 
   def convertPathToFilesystemPath( p: IPath ) = {
     val root = ResourcesPlugin.getWorkspace().getRoot();
-    root.findMember(p).getRawLocation.toOSString
+    root.findMember( p ).getRawLocation.toOSString
   }
 }

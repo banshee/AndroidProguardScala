@@ -1,5 +1,6 @@
 package com.restphone.androidproguardscala.preferences;
 
+import java.io.File
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.runtime.IAdaptable
 import org.eclipse.jdt.core.JavaCore
@@ -7,10 +8,15 @@ import org.eclipse.jface.preference.FieldEditorPreferencePage
 import org.eclipse.jface.preference.RadioGroupFieldEditor
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.ui.IWorkbenchPropertyPage
-import com.restphone.androidproguardscala.ClasspathEntryType._
 import com.restphone.androidproguardscala.ClasspathEntryData
+import com.restphone.androidproguardscala.ClasspathEntryType.IGNORE
+import com.restphone.androidproguardscala.ClasspathEntryType.INPUTJAR
+import com.restphone.androidproguardscala.ClasspathEntryType.LIBRARYJAR
+import com.restphone.androidproguardscala.IgnoredJar
+import com.restphone.androidproguardscala.InputJar
 import com.restphone.androidproguardscala.JavaProjectData
-import org.eclipse.jdt.internal.core.JavaProject
+import com.restphone.jartender.RichFile
+import com.restphone.androidproguardscala.ClasspathEntryType
 
 /**
  * This class represents a preference page that
@@ -33,16 +39,17 @@ class ClasspathPreferences
   var classpathItemEditors: List[ClasspathEntryFieldEditor] = List.empty
 
   def setElement( e: IAdaptable ) = {
-    projectData = new JavaProjectData( JavaCore.create (e.asInstanceOf[IProject]))
+    projectData = new JavaProjectData( JavaCore.create( e.asInstanceOf[IProject] ) )
     setPreferenceStore( projectData.preferences )
   }
 
   override def getElement = projectData.getProject
 
-  setDescription( "Choose the jar files that will be included in the shrunken final jar.  Input jars are included, library jars are passed to Proguard, and ignored files are ignored." )
+  setDescription( "Choose the jar files that will be included in the shrunken final jar.  Input jars are included, library jars are passed to Proguard, and ignored files are ignored.\r\r\r" )
 
   case class ClasspathEntryFieldEditor( displayLabel: String,
                                         fieldName: String,
+                                        fullPath: String,
                                         container: Composite )
     extends RadioGroupFieldEditor( fieldName, displayLabel, 3, ClasspathEntryFieldEditor.choiceValues,
       container ) {
@@ -52,14 +59,22 @@ class ClasspathPreferences
   }
 
   def createFieldEditorForClasspathItem( c: ClasspathEntryData, container: Composite ) = {
-    ClasspathEntryFieldEditor( c.fullPath, c.fieldName, container )
+    ClasspathEntryFieldEditor( c.fullPath, c.fieldName, c.fullPath, container )
+  }
+
+  def defaultValueForClasspathEntryFieldEditor( c: ClasspathEntryFieldEditor ): ClasspathEntryType = {
+    new File( c.fullPath ).getName match {
+      case ( "scala-library.jar" | "scala-swing.jar" | "scala-actors.jar" | "scala-reject.jar" ) => InputJar
+      case _ => IgnoredJar
+    }
   }
 
   override def createFieldEditors(): Unit = {
     val xs = projectData.classpathEntries.toList
     classpathItemEditors = xs map { c => createFieldEditorForClasspathItem( c, getFieldEditorParent ) }
     classpathItemEditors foreach { f =>
-      projectData.preferences.setDefault( f.fieldName, IGNORE )
+      val defaultValue = defaultValueForClasspathEntryFieldEditor( f )
+      projectData.preferences.setDefault( f.fieldName, defaultValue.asString )
       addField( f )
       f.setPreferenceStore( projectData.preferences )
       f.setPage( this );
