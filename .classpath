@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry exported="true" kind="lib" path="lib/androidproguardscalalib_2.10.0-RC3-jar-androidproguardscalalib_2.10.0-RC3-0.1-SNAPSHOT.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/androidproguardscalalib_2.10.0-RC3-jar-androidproguardscalalib_2.10.0-RC3-0.1-SNAPSHOT.jar" sourcepath="/AndroidProguardScalaLib"/>
 	<classpathentry exported="true" kind="lib" path="lib/asm-jar-asm-4.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/guava-jar-guava-13.0.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/jartender_2.10.0-RC3-jar-jartender_2.10.0-RC3-0.3-SNAPSHOT.jar" sourcepath="/Jartender/src/main/scala/"/>
