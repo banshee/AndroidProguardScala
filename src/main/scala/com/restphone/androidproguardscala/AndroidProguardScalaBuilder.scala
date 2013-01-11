@@ -91,28 +91,6 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
 
       val cacheFile = new File( cacheDir / "cache.data" )
 
-      def readCacheSystemFromFile( f: File ) = {
-        val deserializeExceptions = classOf[ClassNotFoundException] :: classOf[ObjectStreamException] :: classOf[ClassCastException] :: stdExceptions
-        implicit val safeDeserialize = convertExceptionToValidation( deserializeExceptions )_
-
-        def bytesToCacheSystem( bytes: Array[Byte] ): FailureValidation[CacheSystem] =
-          for {
-            x <- safeDeserialize( "deserialize CacheSystem", none ) {
-              val obj: Option[CacheSystem] = SerializableUtilities.byteArrayToObject( bytes )
-              obj match {
-                case Some( v ) => v.success
-                case None => FailureWithoutException( "failed to get a cache system object from bytes" ).failureNel
-              }
-            }
-          } yield x
-
-        for {
-          existingFile <- validatedFile( f, "reading cache file" )
-          bytesFromCacheFile = Files.toByteArray( cacheFile )
-          result <- bytesToCacheSystem( bytesFromCacheFile )
-        } yield result
-      }
-
       val result = for {
         cacheSystem <- readCacheSystemFromFile( cacheFile ) ||| ( new CacheSystem ).success
         runner = new ProguardRunner( cacheSystem )
@@ -127,12 +105,34 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
         cacheEntry
       }
 
-      logMsg( "cache run: " + result )
+      logMsg( result.fold( fail = x => x.toString, succ = x => f"Successful cache run ${x.getClass.toString}" ) )
 
       Iterable( outputJar, confDir, cacheDir ) foreach tellEclipsePathNeedsToBeRefreshed
     }
 
     Array.empty
+  }
+
+  def readCacheSystemFromFile( f: File ) = {
+    val deserializeExceptions = classOf[ClassNotFoundException] :: classOf[ObjectStreamException] :: classOf[ClassCastException] :: stdExceptions
+    implicit val safeDeserialize = convertExceptionToValidation( deserializeExceptions )_
+
+    def bytesToCacheSystem( bytes: Array[Byte] ): FailureValidation[CacheSystem] =
+      for {
+        x <- safeDeserialize( "deserialize CacheSystem", none ) {
+          val obj: Option[CacheSystem] = SerializableUtilities.byteArrayToObject( bytes )
+          obj match {
+            case Some( v ) => v.success
+            case None => FailureWithoutException( "failed to get a cache system object from bytes" ).failureNel
+          }
+        }
+      } yield x
+
+    for {
+      existingFile <- validatedFile( f, "reading cache file" )
+      bytesFromCacheFile = Files.toByteArray( existingFile )
+      result <- bytesToCacheSystem( bytesFromCacheFile )
+    } yield result
   }
 
   def tellEclipsePathNeedsToBeRefreshed( p: IPath ) = {

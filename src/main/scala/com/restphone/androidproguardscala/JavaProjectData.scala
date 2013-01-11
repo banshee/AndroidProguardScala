@@ -8,7 +8,7 @@ import org.eclipse.core.resources.ProjectScope
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.jdt.core.IClasspathEntry
-
+import scala.PartialFunction._
 import scalaz._
 import Scalaz._
 
@@ -28,7 +28,7 @@ class JavaProjectData( project: IJavaProject ) {
   }
 
   lazy val preferences = {
-    val projectScope: IScopeContext = new ProjectScope( project.getProject )
+    val projectScope: IScopeContext = new ProjectScope( getProject )
     new ScopedPreferenceStore( projectScope, "com.restphone.androidproguardscala" );
   }
 
@@ -40,7 +40,8 @@ class JavaProjectData( project: IJavaProject ) {
   }
 
   private def stateForClasspathEntryData( c: ClasspathEntryData ): ClasspathEntryType = {
-    ClasspathEntryType.convertStringToClasspathEntryType( preferences.getString( c.fieldName ) ) getOrElse IgnoredJar
+    val pref =  preferences.getString( c.fieldName )
+    ClasspathEntryType.convertStringToClasspathEntryType(pref ) getOrElse (IgnoredJar)
   }
 
   def convertPathToFilesystemPath( p: IPath ) = {

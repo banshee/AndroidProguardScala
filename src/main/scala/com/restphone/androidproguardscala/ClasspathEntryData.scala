@@ -10,7 +10,9 @@ case class ClasspathEntryData( fieldName: String, fullPath: String )
 
 object ClasspathEntryData {
   def convertPathToPreferenceName( pathAsString: String ) = {
-    RichFile.splitFile( new File( pathAsString ) ).reverse match {
+    val files = RichFile.splitFile( new File( pathAsString ) )
+    val elementNames = files map {_.getName}
+    elementNames.reverse match {
       case a :: b :: t => some( f"jarfile_${a}_${b}" )
       case a :: t => some( f"jarfile_x_${a}" )
       case _ => None
