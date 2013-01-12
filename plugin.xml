@@ -95,7 +95,7 @@
 	        point="org.eclipse.ui.propertyPages">
 	  <page objectClass="org.eclipse.core.resources.IProject"
 	        adaptable="true"
-	        name="AndroidProguardScala prop2" 
+	        name="AndroidProguardScala Properties" 
 	       class="com.restphone.androidproguardscala.preferences.ClasspathPreferences"
 	          id="com.restphone.androidproguardscala.preferences.ClasspathPreferencesid">
 	  </page>
