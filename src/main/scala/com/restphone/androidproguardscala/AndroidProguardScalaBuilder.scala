@@ -22,7 +22,9 @@ import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.jdt.core.JavaCore
 
 import com.google.common.io.Files
+import com.restphone.jartender.BuiltLibrary
 import com.restphone.jartender.CacheSystem
+import com.restphone.jartender.ExistingLibrary
 import com.restphone.jartender.FileFailureValidation.FailureValidation
 import com.restphone.jartender.FileFailureValidation.FailureWithoutException
 import com.restphone.jartender.FileFailureValidation.convertExceptionToValidation
@@ -44,20 +46,20 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   override def build( kind: Int, args: java.util.Map[String, String], monitor: IProgressMonitor ): Array[IProject] = {
     val buildRequired = {
       val pathIsBuildArtifact = buildPatternMatch[IPath]( _.lastSegment.startsWith( "proguard_" ) )
-      def buildArtifactsRequireRebuild( xs: Stream[IPath] ): Boolean = {
+      def buildArtifactsRequireRebuild( xs: List[IPath] ): Boolean = {
         xs match {
-          case pathIsBuildArtifact( h ) #:: Stream.Empty => false
-          case pathIsBuildArtifact( h ) #:: t => buildArtifactsRequireRebuild( t )
+          case pathIsBuildArtifact( h ) :: Nil => false
+          case pathIsBuildArtifact( h ) :: t => buildArtifactsRequireRebuild( t )
           case _ => true
         }
       }
 
-      val affected_paths = getDelta( getProject ) match {
-        case x: IResourceDelta => x.getAffectedChildren map { _.getFullPath }
-        case null => Array.empty[IPath]
+      val affected_paths: List[IPath] = getDelta( getProject ) match {
+        case x: IResourceDelta => ( x.getAffectedChildren map { _.getFullPath } ).toList
+        case null => List.empty
       }
 
-      buildArtifactsRequireRebuild( affected_paths.toStream )
+      buildArtifactsRequireRebuild( affected_paths )
     }
 
     if ( buildRequired ) {
