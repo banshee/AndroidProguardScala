@@ -104,6 +104,11 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
         val bytesForCache = SerializableUtilities.convertToByteArray( cacheSystem )
         val lnx = bytesForCache.length
         Files.write( bytesForCache, cacheFile )
+        cacheEntry match {
+          case _: BuiltLibrary =>
+            Iterable( outputJar, confDir, cacheDir ) foreach tellEclipsePathNeedsToBeRefreshed
+          case _: ExistingLibrary =>
+        }
         cacheEntry
       }
 
