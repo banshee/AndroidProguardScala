@@ -75,7 +75,7 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
       val proguardProcessedConfFile = confDir / "proguard_postprocessed.conf"
       val proguardAdditionsFile = confDir / "proguard_additions.conf"
       val cachedJar = cacheDir / "scala-library.CKSUM.jar"
-      val outputJar = rootDirectoryOfProject / "libs" / AndroidProguardScalaBuilder.minifiedScalaLibraryName
+      val outputJar = rootDirectoryOfProject / "libs" / minifiedScalaLibraryName
       val existingOutputFolders = projectdata.outputDirectories
 
       implicit def convertIPathToString( p: IPath ): String = p.toString
@@ -154,7 +154,7 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   //  def scalaProject = scala.tools.eclipse.ScalaProject(getProject)
 
   def isCpeLibrary( x: IClasspathEntry ) = x.getEntryKind == IClasspathEntry.CPE_LIBRARY
-  def isMinifiedLibraryName( s: String ) = s == AndroidProguardScalaBuilder.minifiedScalaLibraryName
+  def isMinifiedLibraryName( s: String ) = s == minifiedScalaLibraryName
 
   def convertResourceToFilesystemLocation( resource: IResource ) = new Path( resource.getLocationURI.getPath )
 
@@ -193,11 +193,12 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
   }
 
   val pluginId = "com.restphone.androidproguardscala"
+
+  def minifiedScalaLibraryName = "scala_library.min.jar"
 }
 
 object AndroidProguardScalaBuilder {
   val BUILDER_ID = "com.restphone.androidproguardscala.Builder";
-  val minifiedScalaLibraryName = "scala_library.min.jar"
 }
 
 class RichPath( p: IPath ) {
