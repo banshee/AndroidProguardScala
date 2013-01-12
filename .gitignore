@@ -5,14 +5,4 @@ lib
 plugins/*.jar
 project/
 target/
-jarjar/asm-jar-asm-4.0.jar
-jarjar/guava-jar-guava-13.0.1.jar
-jarjar/jartender_2.10-jar-jartender_2.10-0.2-SNAPSHOT.jar
-jarjar/javasignatureparser_2.10-jar-javasignatureparser_2.10-0.3-SNAPSHOT.jar
-jarjar/jsr305-jar-jsr305-1.3.9.jar
-jarjar/proguard-base-jar-proguard-base-4.8.jar
-jarjar/scala-actors-jar-scala-actors-2.10.0-SNAPSHOT.jar
-jarjar/scala-library-jar-scala-library-2.10.0-SNAPSHOT.jar
-jarjar/scalaz-concurrent_2.10.0-SNAPSHOT-bundle-scalaz-concurrent_2.10.0-SNAPSHOT-7.0-SNAPSHOT.jar
-jarjar/scalaz-core_2.10.0-SNAPSHOT-bundle-scalaz-core_2.10.0-SNAPSHOT-7.0-SNAPSHOT.jar
-jarjar/scalaz-effect_2.10.0-SNAPSHOT-bundle-scalaz-effect_2.10.0-SNAPSHOT-7.0-SNAPSHOT.jar
+jarjar/*
