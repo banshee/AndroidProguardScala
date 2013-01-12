@@ -17,6 +17,7 @@ import com.restphone.androidproguardscala.InputJar
 import com.restphone.androidproguardscala.JavaProjectData
 import com.restphone.jartender.RichFile
 import com.restphone.androidproguardscala.ClasspathEntryType
+import com.restphone.androidproguardscala.LibraryJar
 
 /**
  * This class represents a preference page that
@@ -63,8 +64,17 @@ class ClasspathPreferences
   }
 
   def defaultValueForClasspathEntryFieldEditor( c: ClasspathEntryFieldEditor ): ClasspathEntryType = {
-    new File( c.fullPath ).getName match {
-      case ( "scala-library.jar" | "scala-swing.jar" | "scala-actors.jar" | "scala-reject.jar" ) => InputJar
+    val MatchesAndroidSdk = ".*android-sdk.*".r
+    val AndroidSupport = """android-support-v\d+.jar""".r
+    val Scalaz = """scalaz-.*jar""".r
+    val Akka = """akka-.*jar""".r
+    (c.fullPath, new File( c.fullPath ).getName) match {
+      case (_, ( "scala-library.jar" | "scala-swing.jar" | "scala-actors.jar" | "scala-reject.jar" )) => InputJar
+      case (_, Scalaz()) => InputJar
+      case (_, Akka()) => InputJar
+      case (_, "android.jar") => LibraryJar
+      case (_, MatchesAndroidSdk()) => LibraryJar
+      case (_, AndroidSupport()) => LibraryJar
       case _ => IgnoredJar
     }
   }
