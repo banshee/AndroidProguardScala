@@ -20,7 +20,11 @@ and install.
 
 2.  Open your Android project.  Right-click on your Android project and choose "Add AndroidProguardScala Nature."
 
-3.  After a build, notice that the directories 'proguard_cache' and 'proguard_cache_conf' are created.
+3.  Open the properties for your project (right-click on the project name in the navigator, select properties from the menu)
+and choose "AndroidProguardScala Properties".  Choose which jars in the classpath will be included in the minified jar.  By
+default, the standard scala libraries will be included.
+
+4.  After a build, notice that the directories 'proguard_cache' and 'proguard_cache_conf' are created.
 
 proguard_cache contains the cached libraries and the files used to figure out which cached library to use (including whether or
 not a new library needs to be generated.
