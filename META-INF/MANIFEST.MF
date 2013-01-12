@@ -11,15 +11,15 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Export-Package: com.restphone.androidproguardscala
 Bundle-ClassPath: bin/,
  .,
- lib/androidproguardscalalib_2.10.0-RC3-jar-androidproguardscalalib_2.10.0-RC3-0.1-SNAPSHOT.jar,
- lib/asm-jar-asm-4.1.jar,
- lib/guava-jar-guava-13.0.1.jar,
- lib/jartender_2.10.0-RC3-jar-jartender_2.10.0-RC3-0.3-SNAPSHOT.jar,
- lib/javasignatureparser_2.10-jar-javasignatureparser_2.10-0.3-SNAPSHOT.jar,
- lib/jsr305-jar-jsr305-1.3.9.jar,
- lib/proguard-base-jar-proguard-base-4.8.jar,
- lib/scala-actors-jar-scala-actors-2.10.0-RC3.jar,
- lib/scala-library-jar-scala-library-2.10.0-RC3.jar,
- lib/scalatest_2.10.0-RC3-jar-scalatest_2.10.0-RC3-2.0.M5-B1.jar,
- lib/scalaz-core_2.10.0-RC3-bundle-scalaz-core_2.10.0-RC3-7.0.0-M5.jar
+ jarjar/androidproguardscalalib_2.10.0-RC3-jar-androidproguardscalalib_2.10.0-RC3-0.1-SNAPSHOT.jar,
+ jarjar/asm-jar-asm-4.1.jar,
+ jarjar/guava-jar-guava-13.0.1.jar,
+ jarjar/jartender_2.10.0-RC3-jar-jartender_2.10.0-RC3-0.3-SNAPSHOT.jar,
+ jarjar/javasignatureparser_2.10-jar-javasignatureparser_2.10-0.3-SNAPSHOT.jar,
+ jarjar/jsr305-jar-jsr305-1.3.9.jar,
+ jarjar/proguard-base-jar-proguard-base-4.8.jar,
+ jarjar/scala-actors-jar-scala-actors-2.10.0-RC3.jar,
+ jarjar/scala-library-jar-scala-library-2.10.0-RC3.jar,
+ jarjar/scalatest_2.10.0-RC3-jar-scalatest_2.10.0-RC3-2.0.M5-B1.jar,
+ jarjar/scalaz-core_2.10.0-RC3-bundle-scalaz-core_2.10.0-RC3-7.0.0-M5.jar
 Bundle-ActivationPolicy: lazy
