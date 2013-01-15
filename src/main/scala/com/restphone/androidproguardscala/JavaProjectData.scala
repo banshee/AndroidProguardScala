@@ -11,6 +11,7 @@ import org.eclipse.jdt.core.IClasspathEntry
 import scala.PartialFunction._
 import scalaz._
 import Scalaz._
+import org.eclipse.core.internal.runtime.Log
 
 class JavaProjectData( project: IJavaProject ) {
   def getProject = project.getProject
@@ -24,7 +25,8 @@ class JavaProjectData( project: IJavaProject ) {
   def outputDirectories = {
     val cpes = project.getResolvedClasspath( true ) filter { _.getEntryKind == IClasspathEntry.CPE_SOURCE } filter { _.getContentKind == IPackageFragmentRoot.K_SOURCE }
     val specificOutputLocations = cpes flatMap { c => Option( c.getOutputLocation ) }
-    ( project.getOutputLocation :: specificOutputLocations.toList ).toSet map convertPathToFilesystemPath
+    val optionalDirectories = ( project.getOutputLocation :: specificOutputLocations.toList ).toSet map convertPathToFilesystemPath
+    optionalDirectories.flatten
   }
 
   lazy val preferences = {
@@ -45,7 +47,12 @@ class JavaProjectData( project: IJavaProject ) {
   }
 
   def convertPathToFilesystemPath( p: IPath ) = {
-    val root = ResourcesPlugin.getWorkspace().getRoot();
-    root.findMember( p ).getRawLocation.toOSString
+    for {
+      root <- Option(ResourcesPlugin.getWorkspace().getRoot())
+      member <- Option(root.findMember(p))
+      rawLocation <- Option(member.getRawLocation)
+      osString <- Option(rawLocation.toOSString)
+    } yield osString
   }
 }
+
