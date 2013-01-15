@@ -4,9 +4,9 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
 	<classpathentry kind="src" path="src/main/java"/>
 	<classpathentry kind="src" path="src/main/scala"/>
-	<classpathentry exported="true" kind="lib" path="bin" sourcepath="bin"/>
-	<classpathentry kind="con" path="org.apache.ivyde.eclipse.cpcontainer.IVYDE_CONTAINER/?project=AndroidProguardScala&amp;ivyXmlPath=ivy.xml&amp;confs=*"/>
+	<classpathentry exported="true" kind="lib" path="bin" sourcepath=""/>
 	<classpathentry kind="lib" path="lib/androidproguardscalalib_2.10.0-RC3-jar-androidproguardscalalib_2.10.0-RC3-0.1-SNAPSHOT.jar"/>
+	<classpathentry kind="con" path="org.apache.ivyde.eclipse.cpcontainer.IVYDE_CONTAINER/?project=AndroidProguardScala&amp;ivyXmlPath=ivy.xml&amp;confs=*"/>
 	<classpathentry kind="lib" path="lib/asm-jar-asm-4.1.jar"/>
 	<classpathentry kind="lib" path="lib/guava-jar-guava-13.0.1.jar"/>
 	<classpathentry kind="lib" path="lib/jartender_2.10.0-RC3-jar-jartender_2.10.0-RC3-0.3-SNAPSHOT.jar"/>
