@@ -36,13 +36,12 @@
 		<nature>org.eclipse.pde.PluginNature</nature>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 		<nature>org.eclipse.pde.api.tools.apiAnalysisNature</nature>
-		<nature>org.apache.ivyde.eclipse.ivynature</nature>
 	</natures>
 	<linkedResources>
 		<link>
 			<name>.ivy2</name>
 			<type>2</type>
-			<location>/Users/james/eclipseIndigo/Eclipse.app/Contents/MacOS/C::/Users/james/.ivy2</location>
+			<location>C:/Users/james/eclipseIndigo/Eclipse.app/Contents/MacOS/C::/Users/james/.ivy2</location>
 		</link>
 	</linkedResources>
 </projectDescription>
