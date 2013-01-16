@@ -10,7 +10,7 @@ for release builds.
 
 NOTE:  Your project must have Scala nature or the plugin will fail to run.
 
-USING THE PLUGIN
+# USING THE PLUGIN
 
 1.  Point Eclipse to:
 
@@ -32,16 +32,17 @@ not a new library needs to be generated.
 proguard_cache_conf contains the generated proguard configuration files.  You should be able to use 
 proguard_postprocessesd.conf as a config file outside of this tool.
 
-BUILDING THE PLUGIN ITSELF
+# Release Notes
+
+## v44
+
+* Fixed https://github.com/banshee/AndroidProguardScala/issues/22.  Defaults are now set correctly.  Before, defaults weren't set
+until you visited the project settings page.
+
+# BUILDING THE PLUGIN ITSELF
 
 * Get a copy of the Eclipse PDE - Plugin Development Environment version.
 
   As of 29 June 2010, that's found at:
 
     http://www.eclipse.org/downloads/index_project.php
-
-SBT
-
-If you prefer to use sbt, this project has a related (but not identical) system for sbt:
-
-https://github.com/banshee/ProguardCache
