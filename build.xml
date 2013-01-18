@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project default="plugin_export" name="build">
-	<target name="plugin_export">
-		<pde.exportPlugins destination="/tmp" exportSource="false" exportType="zip" filename="plugin1.jar.zip" plugins="com.restphone.androidproguardscala" useJARFormat="false"/>
-	</target>
-</project>

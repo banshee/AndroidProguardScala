@@ -39,6 +39,8 @@ proguard_postprocessesd.conf as a config file outside of this tool.
 * Fixed https://github.com/banshee/AndroidProguardScala/issues/22.  Defaults are now set correctly.  Before, defaults weren't set
 until you visited the project settings page.
 
+* 
+
 # BUILDING THE PLUGIN ITSELF
 
 * Get a copy of the Eclipse PDE - Plugin Development Environment version.
