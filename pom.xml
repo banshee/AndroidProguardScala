@@ -35,7 +35,6 @@
 	<parent>
 		<groupId>com.restphone</groupId>
 		<artifactId>com.restphone.androidproguardscala.parent</artifactId>
-		<version>0.0.45-SNAPSHOT</version>
+		<version>0.0.45</version>
 		<relativePath>..\com.restphone.androidproguardscala.parent</relativePath>
-	</parent>
-<version>0.0.45-SNAPSHOT</version></project>
+	</parent></project>
