@@ -30,14 +30,8 @@
 			<arguments>
 			</arguments>
 		</buildCommand>
-		<buildCommand>
-			<name>org.eclipse.m2e.core.maven2Builder</name>
-			<arguments>
-			</arguments>
-		</buildCommand>
 	</buildSpec>
 	<natures>
-		<nature>org.eclipse.m2e.core.maven2Nature</nature>
 		<nature>org.scala-ide.sdt.core.scalanature</nature>
 		<nature>org.eclipse.pde.PluginNature</nature>
 		<nature>org.eclipse.jdt.core.javanature</nature>
@@ -47,7 +41,7 @@
 		<link>
 			<name>.ivy2</name>
 			<type>2</type>
-			<location>C:/Users/james/eclipseIndigo/Eclipse.app/Contents/MacOS/C::/Users/james/.ivy2</location>
+			<location>/Users/james/eclipseIndigo/Eclipse.app/Contents/MacOS/C::/Users/james/eclipseIndigo/Eclipse.app/Contents/MacOS/C::/Users/james/.ivy2</location>
 		</link>
 	</linkedResources>
 </projectDescription>
