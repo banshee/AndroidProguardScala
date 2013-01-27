@@ -12,13 +12,21 @@ NOTE:  Your project must have Scala nature or the plugin will fail to run.
 
 # USING THE PLUGIN
 
+1.  Install the Scala IDE from http://download.scala-ide.org/nightly-update-master-trunk.  
+There's a problem with M3 and Android (it won't always recompile
+Scala binaries), so you'll want a nightly.
+
 1.  Point Eclipse to:
 
 https://androidproguardscala.s3.amazonaws.com/UpdateSiteForAndroidProguardScala
 
 and install.
 
-2.  Open your Android project.  Right-click on your Android project and choose "Add AndroidProguardScala Nature."
+2.  Open an existing Android project, or create a new one.
+
+2.  Add Scala nature to the project by right-clicking the project name.
+
+2.  Right-click on your Android project and choose "Add AndroidProguardScala Nature."
 
 3.  Open the properties for your project (right-click on the project name in the navigator, select properties from the menu)
 and choose "AndroidProguardScala Properties".  Choose which jars in the classpath will be included in the minified jar.  By
@@ -33,6 +41,10 @@ proguard_cache_conf contains the generated proguard configuration files.  You sh
 proguard_postprocessesd.conf as a config file outside of this tool.
 
 # Release Notes
+
+## v45
+
+* Improved build process to avoid issues with categorization
 
 ## v44
 
