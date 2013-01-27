@@ -16,11 +16,9 @@ NOTE:  Your project must have Scala nature or the plugin will fail to run.
 There's a problem with M3 and Android (it won't always recompile
 Scala binaries), so you'll want a nightly.
 
-1.  Point Eclipse to:
-
-https://androidproguardscala.s3.amazonaws.com/UpdateSiteForAndroidProguardScala
-
-and install.
+1.  Point Eclipse to the update site at <code>https://androidproguardscala.s3.amazonaws.com/UpdateSiteForAndroidProguardScala</code> and install.
+Note that this isn't a link you can visit in a browser.
+Eclipse knows about the layout of files underneath that link, but you'll just get a 404 for the top level.
 
 2.  Open an existing Android project, or create a new one.
 
