@@ -7,8 +7,7 @@ tmpjar1=/tmp/jar1.jar
 tmpjar2=/tmp/jar2.jar
 ( cd bin ; jar cf $tmpjar1 `find com -name \*.class` )
 java -jar $jarjar process jarjarrule.move_scala_to_com_restphone $tmpjar1 $tmpjar2
-mkdir -p jarjarbin
-( cd jarjarbin ; rm -rf com org ; jar xf $tmpjar2 )
+( cd bin ; rm -rf com org ; jar xf $tmpjar2 )
 
 # Run all lib files through jarjar
 mkdir -p jarjar
