@@ -1,4 +1,4 @@
-OVERVIEW
+# OVERVIEW
 
 AndroidProguardScala is an Eclipse plugin that speeds up the development process when you're using Scala on Android.
 
@@ -48,11 +48,3 @@ proguard_postprocessesd.conf as a config file outside of this tool.
 
 * Fixed https://github.com/banshee/AndroidProguardScala/issues/22.  Defaults are now set correctly.  Before, defaults weren't set
 until you visited the project settings page.
-
-# BUILDING THE PLUGIN ITSELF
-
-* Get a copy of the Eclipse PDE - Plugin Development Environment version.
-
-  As of 29 June 2010, that's found at:
-
-    http://www.eclipse.org/downloads/index_project.php
