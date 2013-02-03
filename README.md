@@ -36,7 +36,7 @@ proguard_cache contains the cached libraries and the files used to figure out wh
 not a new library needs to be generated.
 
 proguard_cache_conf contains the generated proguard configuration files.  You should be able to use 
-proguard_postprocessesd.conf as a config file outside of this tool.
+proguard_postprocessed.conf as a config file outside of this tool.
 
 # Release Notes
 
