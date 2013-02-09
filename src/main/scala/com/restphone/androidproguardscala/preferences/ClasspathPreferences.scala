@@ -18,6 +18,8 @@ import com.restphone.androidproguardscala.JavaProjectData
 import com.restphone.jartender.RichFile
 import com.restphone.androidproguardscala.ClasspathEntryType
 import com.restphone.androidproguardscala.LibraryJar
+import org.eclipse.core.runtime.IPath
+import org.eclipse.core.runtime.Path
 
 /**
  * This class represents a preference page that
@@ -37,10 +39,10 @@ class ClasspathPreferences
   extends FieldEditorPreferencePage( FieldEditorPreferencePage.GRID )
   with IWorkbenchPropertyPage {
   var projectData: JavaProjectData = null
-  var classpathItemEditors: List[ClasspathEntryFieldEditor] = List.empty
+  var classpathItemEditors: List[ ClasspathEntryFieldEditor ] = List.empty
 
   def setElement( e: IAdaptable ) = {
-    projectData = new JavaProjectData( JavaCore.create( e.asInstanceOf[IProject] ) )
+    projectData = new JavaProjectData( JavaCore.create( e.asInstanceOf[ IProject ] ) )
     setPreferenceStore( projectData.preferences )
   }
 
@@ -63,27 +65,30 @@ class ClasspathPreferences
     ClasspathEntryFieldEditor( c.fullPath, c.fieldName, c.fullPath, container )
   }
 
-  def defaultValueForClasspathEntryFieldEditor( c: ClasspathEntryFieldEditor ): ClasspathEntryType = {
-    val MatchesAndroidSdk = ".*android-sdk.*".r
-    val AndroidSupport = """android-support-v\d+.jar""".r
-    val Scalaz = """scalaz-.*jar""".r
-    val Akka = """akka-.*jar""".r
-    (c.fullPath, new File( c.fullPath ).getName) match {
-      case (_, ( "scala-library.jar" | "scala-swing.jar" | "scala-actors.jar" | "scala-reject.jar" )) => InputJar
-      case (_, Scalaz()) => InputJar
-      case (_, Akka()) => InputJar
-      case (_, "android.jar") => LibraryJar
-      case (_, MatchesAndroidSdk()) => LibraryJar
-      case (_, AndroidSupport()) => LibraryJar
-      case _ => IgnoredJar
-    }
-  }
-
+//  def defaultValueForClasspathEntryFieldEditor( c: ClasspathEntryFieldEditor ): ClasspathEntryType = {
+//    val MatchesAndroidSdk = ".*android-sdk.*".r
+//    val AndroidSupport = """android-support-v\d+.jar""".r
+//    val Scalaz = """scalaz-.*jar""".r
+//    val Akka = """akka-.*jar""".r
+//    val s = new File( c.fullPath ).getName + " " + c.toString
+//    println(s)
+//    ( c.fullPath, new File( c.fullPath ).getName ) match {
+//      case ( _, ( "scala-swing.jar" ) ) => IgnoredJar
+//      case ( _, ( "scala-library.jar" | "scala-actors.jar" | "scala-reflect.jar" ) ) => InputJar
+//      case ( _, Scalaz() ) => InputJar
+//      case ( _, Akka() ) => InputJar
+//      case ( _, "android.jar" ) => LibraryJar
+//      case ( _, MatchesAndroidSdk() ) => LibraryJar
+//      case ( _, AndroidSupport() ) => LibraryJar
+//      case _ => IgnoredJar
+//    }
+//  }
+//
   override def createFieldEditors(): Unit = {
     val xs = projectData.classpathEntries.toList
     classpathItemEditors = xs map { c => createFieldEditorForClasspathItem( c, getFieldEditorParent ) }
     classpathItemEditors foreach { f =>
-      val defaultValue = defaultValueForClasspathEntryFieldEditor( f )
+      val defaultValue = projectData.defaultValueForClasspathEntry(new Path(f.fullPath))
       projectData.preferences.setDefault( f.fieldName, defaultValue.asString )
       addField( f )
       f.setPreferenceStore( projectData.preferences )
