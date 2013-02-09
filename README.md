@@ -36,7 +36,19 @@ proguard_cache contains the cached libraries and the files used to figure out wh
 not a new library needs to be generated.
 
 proguard_cache_conf contains the generated proguard configuration files.  You should be able to use 
-proguard_postprocessesd.conf as a config file outside of this tool.
+proguard_postprocessed.conf as a config file outside of this tool.
+
+# Troubleshooting
+
+* If you get a scala-library.min.jar, but it's empty, make sure you have a resonable set of libraries configured in the 
+plugin properties.  Right click on your project and select AndroidProguardScala properties.  ("Reasonable" depends on what you're
+trying do do - just keep in mind that the plugin properties end up as settings in proguard_processed.conf.)
+
+* Look at the proguard_processed.conf file.  Does it make sense?  There should be -libraryjar lines for the standard Scala
+libraries that your project uses, and -keep lines for all of your own code.
+
+* Can you run proguard from a command line using the proguard_processed.conf file?  That file is a normal proguard configuration
+and should work outside the plugin - there's nothing special or exotic about it.
 
 # Release Notes
 
