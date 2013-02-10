@@ -52,6 +52,13 @@ and should work outside the plugin - there's nothing special or exotic about it.
 
 # Release Notes
 
+## v46
+
+* Changed Proguard defaults to include fix for https://issues.scala-lang.org/browse/SI-5397 
+* Updated to Scala release 2.10
+* Default to ignore scala-swing.jar
+* Internal build improvements
+
 ## v45
 
 * Improved build process to avoid issues with categorization
