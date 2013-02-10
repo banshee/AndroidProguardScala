@@ -61,7 +61,6 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
 
     if ( buildRequired ) {
       val proguardDefaults = {
-        val pathToDefaultsFile = pluginDirectory.get / "proguard_cache_conf" / "proguard_defaults.conf"
         val url = new URL( "platform:/plugin/com.restphone.androidproguardscala/proguard_cache_conf/proguard_defaults.conf" );
         val inputStream = url.openConnection().getInputStream();
         val s = scala.io.Source.fromInputStream( inputStream )
