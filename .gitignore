@@ -6,3 +6,4 @@ plugins/*.jar
 project/
 target/
 jarjar/*
+output
