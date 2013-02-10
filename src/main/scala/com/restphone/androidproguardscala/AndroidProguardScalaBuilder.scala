@@ -90,6 +90,7 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
       val proguardCacheParameters = new ProguardCacheParameters(
         jartenderConfiguration = jartenderParams,
         proguardAdditionsFile = proguardAdditionsFile,
+        proguardDefaults = proguardDefaults,
         proguardProcessedConfFile = proguardProcessedConfFile )
 
       val cacheFile = new File( cacheDir / "cache.data" )
