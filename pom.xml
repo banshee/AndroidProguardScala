@@ -84,7 +84,7 @@
   <repositories>
     <repository>
       <id>snapshots</id>
-      <url>http://git:8081/nexus/content/groups/public</url>
+      <url>http://localhost:8081/nexus/content/groups/public</url>
       <snapshots>
         <enabled>true</enabled>
         <!-- never, daily, interval:X (where X is in minutes) or always -->
