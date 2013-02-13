@@ -64,7 +64,7 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
         val url = new URL( "platform:/plugin/com.restphone.androidproguardscala/proguard_cache_conf/proguard_defaults.conf" );
         val inputStream = url.openConnection().getInputStream();
         val s = scala.io.Source.fromInputStream( inputStream )
-        val result = s.getLines.mkString( "\n" )
+        val result = s.getLines.mkString( "\n" ) + "\n\n# Plugin version: " + platformBundle.getVersion.toString + "\n"
         s.close()
         result
       }
