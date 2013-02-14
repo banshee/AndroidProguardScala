@@ -5,6 +5,8 @@ import java.io.File
 
 object NotNull {
   val catchNull = catching(classOf[NullPointerException])
+  
+  val ignoreExceptions = catchNull
 
   def apply[T](x: => T, msg: String = "must not be null"): Option[T] = {
     catchNull.opt(x) match {
