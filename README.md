@@ -50,6 +50,20 @@ libraries that your project uses, and -keep lines for all of your own code.
 * Can you run proguard from a command line using the proguard_processed.conf file?  That file is a normal proguard configuration
 and should work outside the plugin - there's nothing special or exotic about it.
 
+# Reporting bugs
+
+If you've got a failing project, the very best thing for me is a tarball of the entire project,
+including all the built binaries.  Yes, this is big, but most android projects will be less than a gigabyte.
+
+The second-best thing is all of the source files minus the binaries.  Definitely include all the files I need to 
+bring this up as an Eclipse project.
+
+The third-best is something like an sbt project where I can run 'sbt eclipse'.  The problem with this is that 
+sbt-eclipse doesn't always produce a working project, so I'm less likely to be able to take the time to get it working.
+
+If you can't do that, a copy of the generated proguard config file is helpful, along with any errors you see in the 
+Eclipse error log.
+
 # Release Notes
 
 ## v46
