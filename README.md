@@ -66,6 +66,12 @@ Eclipse error log.
 
 # Release Notes
 
+## v47
+
+* An Eclipse clean build now cleans the AndroidProguardScala cache
+* Added the plugin version number to the generated Proguard config file (should make tracking down bugs easier)
+* Write the name of the cached library to the Eclipse log on a build, don't just report a cache hit or miss
+
 ## v46
 
 * Changed Proguard defaults to include fix for https://issues.scala-lang.org/browse/SI-5397 
