@@ -89,4 +89,10 @@
       </releases>
     </repository>
   </repositories>
+  <scm>
+    <url>git://github.com/banshee/AndroidProguardScala.git</url>
+  </scm>
+  <issueManagement>
+    <url>https://github.com/banshee/AndroidProguardScala/issues</url>
+  </issueManagement>
 </project>
