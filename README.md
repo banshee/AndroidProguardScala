@@ -38,6 +38,32 @@ not a new library needs to be generated.
 proguard_cache_conf contains the generated proguard configuration files.  You should be able to use 
 proguard_postprocessed.conf as a config file outside of this tool.
 
+# Managed dependencies
+
+As long as your dependency resolution tool puts libraries on the classpath, this plugin can use them.
+
+## Ivy
+
+I use (IvyDE)[http://ant.apache.org/ivy/ivyde/] to manage dependencies in Eclipse.
+IvyDE puts dependencies in its own classpath container, so you can just mark them as input jars
+and they'll end up in scala-library.min.jar.  Nothing to configure other than marking the jars correctly in the plugin preferences.
+See the sbt section for how to turn sbt dependencies into something that IvyDE can use.
+
+## sbt
+
+sbt will generate ivy dependency files that can be read by IvyDE.  Just run deliver-local in sbt and it'll build an ivy xml file in
+something like target/scala-2.10/ivy-0.4-SNAPSHOT.xml.  Point IvyDE to that file and you'll end up with dependencies on your
+classpath that can be used by the plugin.
+
+I don't actually use that ivy file though, since sbt can delete it.  I copy target/scala-2.10/ivy-0.4-SNAPSHOT.xml into the
+project root and name it ivy.xml.  It's an extra step (that can probably be automated inside sbt, but I've never bothered to learn 
+how) but it avoids problems with the sbt build removing target/scala-2.10/ivy-0.4-SNAPSHOT.xml.
+
+## Maven
+
+TBD.  The problem with m2eclipse is that it takes over lots of the build process, so I never got it working nicely with
+AndroidProguardScala.
+
 # Troubleshooting
 
 * If you get a scala-library.min.jar, but it's empty, make sure you have a resonable set of libraries configured in the 
