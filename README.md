@@ -44,7 +44,7 @@ As long as your dependency resolution tool puts libraries on the classpath, this
 
 ## Ivy
 
-I use (IvyDE)[http://ant.apache.org/ivy/ivyde/] to manage dependencies in Eclipse.
+I use [IvyDE](http://ant.apache.org/ivy/ivyde/) to manage dependencies in Eclipse.
 IvyDE puts dependencies in its own classpath container, so you can just mark them as input jars
 and they'll end up in scala-library.min.jar.  Nothing to configure other than marking the jars correctly in the plugin preferences.
 See the sbt section for how to turn sbt dependencies into something that IvyDE can use.
