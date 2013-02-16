@@ -92,7 +92,11 @@ Eclipse error log.
 
 # Release Notes
 
-## v47
+## v48 (in development - you'll need to build it yourself to see these changes)
+
+* Fixed license files and xml
+
+## v47 (current release)
 
 * An Eclipse clean build now cleans the AndroidProguardScala cache
 * Added the plugin version number to the generated Proguard config file (should make tracking down bugs easier)
