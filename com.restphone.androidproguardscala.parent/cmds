@@ -1,0 +1,11 @@
+# Note that this is just notes to myself for now
+
+~/src/s3cmd/s3cmd del --recursive s3://androidproguardscala/UpdateSiteForAndroidProguardScala/
+~/src/s3cmd/s3cmd -P sync /Users/james/workspace/com.restphone.androidproguardscala.updatesite/target/repository/ s3://androidproguardscala/UpdateSiteForAndroidProguardScala/
+( cd ~/workspace/AndroidProguardScala ; sh -x jarbuild.sh ; cd ../com.restphone.androidproguardscala.parent/ ; mvn clean install )
+
+
+for i in AndroidProguardScala AndroidProguardScalaFeature com.restphone.androidproguardscala.parent com.restphone.androidproguardscala.updatesite Jartender JavaSignatureParser/ ; do ( cd $i ; git push --tags ; ) ; done 
+
+# Then set a new version
+mvn -Dtycho.mode=maven org.eclipse.tycho:tycho-versions-plugin:set-version -DnewVersion=0.0.45-SNAPSHOT
