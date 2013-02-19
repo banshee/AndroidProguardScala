@@ -1,0 +1,40 @@
+#Android generated
+bin
+gen
+
+#Eclipse
+.project
+.classpath
+.settings
+.metadata
+
+#IntelliJ IDEA
+.idea
+*.iml
+*.ipr
+*.iws
+
+#Maven
+target
+release.properties
+pom.xml.*
+
+# Emacs
+*~
+
+website/_site
+
+#Ant
+build.xml
+local.properties
+proguard.cfg
+
+#OSX
+.DS_Store
+
+proguard_cache
+proguard_cache_conf
+
+lib
+libs
+.cache
