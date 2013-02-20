@@ -39,7 +39,7 @@
 			../com.restphone.androidproguardscala.updatesite
 		</module>
 	</modules>
-	<version>0.0.47-SNAPSHOT</version>
+	<version>0.0.48-SNAPSHOT</version>
 </project>
 
 

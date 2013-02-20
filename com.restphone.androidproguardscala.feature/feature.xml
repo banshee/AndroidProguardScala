@@ -2,7 +2,7 @@
 <feature
       id="com.restphone.androidproguardscala.feature"
       label="Android/Proguard/Scala Feature"
-      version="0.0.47.qualifier">
+      version="0.0.48.qualifier">
 
    <description url="https://github.com/banshee/AndroidProguardScala">
       Eclipse plugin to improve the Scala development experience on Android.
@@ -32,6 +32,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA. 
          id="com.restphone.androidproguardscala"
          download-size="0"
          install-size="0"
-         version="0.0.47.qualifier" unpack="true"/>
+         version="0.0.48.qualifier" unpack="true"/>
 
 </feature>
