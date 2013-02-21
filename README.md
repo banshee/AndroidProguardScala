@@ -95,6 +95,7 @@ Eclipse error log.
 ## v48 (in development - you'll need to build it yourself to see these changes)
 
 * Fixed license files and xml
+* Build improvements for working in the Scala ecosystem
 
 ## v47 (current release)
 
