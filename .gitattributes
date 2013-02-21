@@ -9,18 +9,14 @@
 *.msbuild text
 *.md      text
 
-* .MF text
-* .conf text
 * .html text
 * .java text
-* .md text
-* .move_scala_to_com_restphone text
-* .prefs text
 * .sbt text
 * .scala text
 * .sh text
 * .txt text
 * .xml text
+* .pom text
 
 # Images should be treated as binary
 # (binary is a macro for -text -diff)
