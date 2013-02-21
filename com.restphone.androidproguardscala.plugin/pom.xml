@@ -74,7 +74,6 @@
       <version>0.4-SNAPSHOT</version>
     </dependency>
   </dependencies>
-
   <repositories>
     <repository>
       <id>snapshots</id>
@@ -95,4 +94,5 @@
   <issueManagement>
     <url>https://github.com/banshee/AndroidProguardScala/issues</url>
   </issueManagement>
-<version>0.0.47-SNAPSHOT</version></project>
+  <version>0.0.47-SNAPSHOT</version>
+</project>
