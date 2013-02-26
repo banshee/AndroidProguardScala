@@ -195,7 +195,8 @@
           </jvmArgs>
           <scalaVersion>2.10.0</scalaVersion>
         </configuration>
-      </plugin><plugin>
+      </plugin>
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
         <version>2.1.2</version>
@@ -207,12 +208,14 @@
             </goals>
           </execution>
         </executions>
-      </plugin><plugin>
+      </plugin>
+      <plugin>
         <groupId>org.eclipse.tycho</groupId>
         <artifactId>tycho-maven-plugin</artifactId>
         <version>${tycho.version}</version>
         <extensions>true</extensions>
-      </plugin><plugin>
+      </plugin>
+      <plugin>
         <groupId>org.eclipse.tycho</groupId>
         <artifactId>tycho-compiler-plugin</artifactId>
         <version>${tycho.version}</version>
@@ -221,7 +224,8 @@
             <excludeResource>**/*.scala</excludeResource>
           </excludeResources>
         </configuration>
-      </plugin><plugin>
+      </plugin>
+      <plugin>
         <groupId>org.eclipse.tycho</groupId>
         <artifactId>tycho-source-plugin</artifactId>
         <version>${tycho.version}</version>
@@ -233,7 +237,8 @@
             </goals>
           </execution>
         </executions>
-      </plugin><plugin>
+      </plugin>
+      <plugin>
         <groupId>org.eclipse.tycho</groupId>
         <artifactId>tycho-packaging-plugin</artifactId>
         <version>${tycho.version}</version>
@@ -241,7 +246,8 @@
           <format>'${version.tag}-${version.suffix}-'yyyyMMddHHmm'-${buildNumber}'</format>
           <archiveSite>true</archiveSite>
         </configuration>
-      </plugin><plugin>
+      </plugin>
+      <plugin>
           <groupId>org.eclipse.tycho</groupId>
           <artifactId>tycho-surefire-plugin</artifactId>
           <version>${tycho.version}</version>
@@ -250,7 +256,9 @@
             <useUIThread>false</useUIThread>
             <argLine>${tycho.test.jvmArgs}</argLine>
           </configuration>
-        </plugin><!-- plugin used to extract the git hash --><plugin>
+        </plugin>
+        <!-- plugin used to extract the git hash -->
+        <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>buildnumber-maven-plugin</artifactId>
         <version>1.1</version>
