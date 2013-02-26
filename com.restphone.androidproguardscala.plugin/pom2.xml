@@ -1,23 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+<project
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+  xmlns="http://maven.apache.org/POM/4.0.0"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <prerequisites>
     <maven>3.0</maven>
   </prerequisites>
-  <groupId>org.example</groupId>
-  <artifactId>org.example.plugin.build</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
-  <name>Scala IDE Sample plugin</name>
-  <packaging>pom</packaging>
-
-  <modules>
-    <module>org.example.plugin</module>
-    <module>org.example.plugin.tests</module>
-    <module>org.example.plugin.feature</module>
-    <module>org.example.plugin.source.feature</module>
-    <module>org.example.plugin.update-site</module>
-  </modules>
+  <artifactId>com.restphone.androidproguardscala</artifactId>
+  <version>0.0.48-SNAPSHOT</version>
+  <packaging>eclipse-plugin</packaging>
+  <parent>
+    <groupId>com.restphone</groupId>
+    <artifactId>com.restphone.androidproguardscala.parent</artifactId>
+    <version>0.0.48-SNAPSHOT</version>
+    <relativePath>..\com.restphone.androidproguardscala.parent</relativePath>
+  </parent>
 
   <properties>
     <encoding>UTF-8</encoding>
@@ -32,7 +30,8 @@
 
     <!-- tycho test related -->
     <tycho.test.OSspecific></tycho.test.OSspecific>
-    <tycho.test.jvmArgs>-Xmx800m -XX:MaxPermSize=256m -Dsdtcore.headless ${tycho.test.OSspecific}</tycho.test.jvmArgs>
+    <tycho.test.jvmArgs>-Xmx800m -XX:MaxPermSize=256m -Dsdtcore.headless
+      ${tycho.test.OSspecific}</tycho.test.jvmArgs>
 
     <!-- dependencies repos -->
     <eclipse.codename>indigo</eclipse.codename>
@@ -45,11 +44,11 @@
     <version.tag>local</version.tag>
     <repo.scala-ide>${repo.scala-ide.root}/releases-29/stable/site</repo.scala-ide>
     <junit.version>4.10</junit.version>
-   </properties>
+  </properties>
 
   <profiles>
     <profile>
-      <!-- this is the default profile, using the stable Scala build-->
+      <!-- this is the default profile, using the stable Scala build -->
       <id>scala-2.9</id>
     </profile>
     <profile>
@@ -74,7 +73,7 @@
       <properties>
         <tycho.test.OSspecific>-Dosgi.ws=cocoa -XstartOnFirstThread</tycho.test.OSspecific>
       </properties>
-       <build>
+      <build>
         <pluginManagement>
           <plugins>
             <plugin>
@@ -95,10 +94,10 @@
     </profile>
   </profiles>
 
-  <!-- scm configuration is require to extract the github hash-->
-  <scm> 
-    <connection>scm:git://github.com/skyluc/plugin.git</connection> 
-    <url>https://github.com/skyluc/plugin</url> 
+  <!-- scm configuration is require to extract the github hash -->
+  <scm>
+    <connection>scm:git://github.com/skyluc/plugin.git</connection>
+    <url>https://github.com/skyluc/plugin</url>
   </scm>
 
   <dependencyManagement>
@@ -108,15 +107,33 @@
         <artifactId>junit</artifactId>
         <version>${junit.version}</version>
       </dependency>
+      <dependency>
+        <groupId>com.restphone</groupId>
+        <artifactId>androidproguardscalalib_2.10</artifactId>
+        <version>0.4-SNAPSHOT</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
   <repositories>
     <repository>
+      <id>snapshots</id>
+      <url>http://localhost:8081/nexus/content/groups/public</url>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>interval:1</updatePolicy>
+      </snapshots>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+    </repository>
+      <repository>
       <id>sonatype.release</id>
       <name>Sonatype maven release repository</name>
       <url>https://oss.sonatype.org/content/repositories/releases/</url>
-      <snapshots><enabled>false</enabled></snapshots>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
     </repository>
     <repository>
       <id>sonatype.snapshot</id>
@@ -131,14 +148,18 @@
       <name>Scala IDE p2 repository</name>
       <layout>p2</layout>
       <url>${repo.scala-ide}</url>
-      <snapshots><enabled>false</enabled></snapshots>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
     </repository>
     <repository>
       <id>eclipse.${eclipse.codename}</id>
       <name>Eclipse p2 repository</name>
       <layout>p2</layout>
       <url>${repo.eclipse}</url>
-      <snapshots><enabled>false</enabled></snapshots>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
     </repository>
   </repositories>
 
@@ -189,8 +210,8 @@
         </executions>
         <configuration>
           <jvmArgs>
-            <jvmArg>-Xms1512m</jvmArg>
-            <jvmArg>-Xmx4024m</jvmArg>
+            <jvmArg>-Xms512m</jvmArg>
+            <jvmArg>-Xmx1024m</jvmArg>
           </jvmArgs>
         </configuration>
       </plugin>
@@ -230,7 +251,7 @@
           <archiveSite>true</archiveSite>
         </configuration>
       </plugin>
-      <!-- plugin used to extract the git hash-->
+      <!-- plugin used to extract the git hash -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>buildnumber-maven-plugin</artifactId>
@@ -251,6 +272,4 @@
       </plugin>
     </plugins>
   </build>
-
 </project>
-

@@ -25,7 +25,7 @@
     <repo.scala-ide.root>http://download.scala-ide.org</repo.scala-ide.root>
 
     <!-- fixed versions -->
-    <tycho.version>0.16.0</tycho.version>
+    <tycho.version>0.14.1</tycho.version>
     <scala.plugin.version>3.0.2</scala.plugin.version>
 
     <!-- tycho test related -->
@@ -174,35 +174,7 @@
   <build>
     <pluginManagement>
       <plugins>
-        <plugin>
-          <groupId>org.eclipse.tycho</groupId>
-          <artifactId>tycho-surefire-plugin</artifactId>
-          <version>${tycho.version}</version>
-          <configuration>
-            <useUIHarness>false</useUIHarness>
-            <useUIThread>false</useUIThread>
-            <argLine>${tycho.test.jvmArgs}</argLine>
-          </configuration>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-    <plugins>
-      <plugin>
-        <groupId>org.eclipse.tycho</groupId>
-        <artifactId>tycho-maven-plugin</artifactId>
-        <version>${tycho.version}</version>
-        <extensions>true</extensions>
-      </plugin>
-      <plugin>
-        <groupId>org.eclipse.tycho</groupId>
-        <artifactId>tycho-compiler-plugin</artifactId>
-        <version>${tycho.version}</version>
-        <configuration>
-          <excludeResources>
-            <excludeResource>**/*.scala</excludeResource>
-          </excludeResources>
-        </configuration>
-      </plugin>
+        
       <plugin>
         <!-- configuration of the scala compiler -->
         <groupId>net.alchim31.maven</groupId>
@@ -223,21 +195,7 @@
           </jvmArgs>
           <scalaVersion>2.10.0</scalaVersion>
         </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.eclipse.tycho</groupId>
-        <artifactId>tycho-source-plugin</artifactId>
-        <version>${tycho.version}</version>
-        <executions>
-          <execution>
-            <id>attach-source</id>
-            <goals>
-              <goal>plugin-source</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
+      </plugin><plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
         <version>2.1.2</version>
@@ -249,9 +207,33 @@
             </goals>
           </execution>
         </executions>
-      </plugin>
-      <!-- for setting a better qualifier -->
-      <plugin>
+      </plugin><plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-maven-plugin</artifactId>
+        <version>${tycho.version}</version>
+        <extensions>true</extensions>
+      </plugin><plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-compiler-plugin</artifactId>
+        <version>${tycho.version}</version>
+        <configuration>
+          <excludeResources>
+            <excludeResource>**/*.scala</excludeResource>
+          </excludeResources>
+        </configuration>
+      </plugin><plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-source-plugin</artifactId>
+        <version>${tycho.version}</version>
+        <executions>
+          <execution>
+            <id>attach-source</id>
+            <goals>
+              <goal>plugin-source</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin><plugin>
         <groupId>org.eclipse.tycho</groupId>
         <artifactId>tycho-packaging-plugin</artifactId>
         <version>${tycho.version}</version>
@@ -259,9 +241,16 @@
           <format>'${version.tag}-${version.suffix}-'yyyyMMddHHmm'-${buildNumber}'</format>
           <archiveSite>true</archiveSite>
         </configuration>
-      </plugin>
-      <!-- plugin used to extract the git hash -->
-      <plugin>
+      </plugin><plugin>
+          <groupId>org.eclipse.tycho</groupId>
+          <artifactId>tycho-surefire-plugin</artifactId>
+          <version>${tycho.version}</version>
+          <configuration>
+            <useUIHarness>false</useUIHarness>
+            <useUIThread>false</useUIThread>
+            <argLine>${tycho.test.jvmArgs}</argLine>
+          </configuration>
+        </plugin><!-- plugin used to extract the git hash --><plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>buildnumber-maven-plugin</artifactId>
         <version>1.1</version>
@@ -279,6 +268,7 @@
           <shortRevisionLength>7</shortRevisionLength>
         </configuration>
       </plugin>
-    </plugins>
+      </plugins>
+    </pluginManagement>
   </build>
 </project>
