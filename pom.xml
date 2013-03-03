@@ -121,7 +121,6 @@
             <jvmArg>-Xms1512m</jvmArg>
             <jvmArg>-Xmx4024m</jvmArg>
           </jvmArgs>
-          <scalaVersion>2.10.0</scalaVersion>
         </configuration>
       </plugin>
       <plugin>
