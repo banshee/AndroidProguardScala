@@ -1,8 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<feature
-      id="com.restphone.androidproguardscala.feature"
-      label="Android/Proguard/Scala Feature"
-      version="0.0.48.qualifier">
+<?xml version='1.0' encoding='UTF-8'?>
+<feature version="0.0.48.qualifier" label="Android/Proguard/Scala Feature" id="com.restphone.androidproguardscala.feature">
 
    <description url="https://github.com/banshee/AndroidProguardScala">
       Eclipse plugin to improve the Scala development experience on Android.
@@ -28,10 +25,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.   </license>
-   <plugin
-         id="com.restphone.androidproguardscala"
-         download-size="0"
-         install-size="0"
-         version="0.0.48.qualifier" unpack="true"/>
+   <plugin unpack="true" version="0.0.48.qualifier" install-size="0" download-size="0" id="com.restphone.androidproguardscala"></plugin>
 
 </feature>
