@@ -8,7 +8,13 @@
   <version>0.0.48-SNAPSHOT</version>
   <packaging>pom</packaging>
   <properties>
-    <tycho-version>0.14.1</tycho-version>
+    <encoding>UTF-8</encoding>
+    <tycho.version>0.14.1</tycho.version>
+    <repo.eclipse>http://download.eclipse.org/releases/indigo/</repo.eclipse>
+    <repo.scala-ide.root>http://download.scala-ide.org/ecosystem/</repo.scala-ide.root>
+    <repo.scala-ide>${repo.scala-ide.root}/scala210/dev/base/</repo.scala-ide>
+    <scala.version>2.10.0</scala.version>
+    <junit.version>4.10</junit.version>
   </properties>
   <build>
     <plugins>
@@ -27,9 +33,42 @@
   </build>
   <repositories>
     <repository>
-      <id>eclipse-indigo</id>
+      <id>eclipse</id>
       <layout>p2</layout>
-      <url>http://download.eclipse.org/releases/indigo</url>
+      <url>${repo.eclipse}</url>
+    </repository>
+    <repository>
+      <id>snapshots</id>
+      <url>http://localhost:8081/nexus/content/groups/public</url>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>interval:1</updatePolicy>
+      </snapshots>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+    </repository>
+    <repository>
+      <id>sonatype.release</id>
+      <name>Sonatype maven release repository</name>
+      <url>https://oss.sonatype.org/content/repositories/releases/</url>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>sonatype.snapshot</id>
+      <name>Sonatype maven snapshot repository</name>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+      <snapshots>
+        <updatePolicy>daily</updatePolicy>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>scala-ide</id>
+      <name>Scala IDE p2 repository</name>
+      <layout>p2</layout>
+      <url>http://download.scala-ide.org/ecosystem/e37/scala210/dev/site</url>
     </repository>
   </repositories>
   <modules>
