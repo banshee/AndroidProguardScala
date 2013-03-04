@@ -26,7 +26,7 @@ for eclipse in e37 e38; do
         scalaIdeUrl="-Drepo.scala-ide=$finalUrl"
         ( cd $destination ; mvn -Pset-versions $scalaIdeUrl $eclipseUrlArg -Dtycho.style=maven --non-recursive exec:java ; echo "cd com.restphone.androidproguardscala.parent ; mvn $scalaIdeUrl $eclipseUrlArg install" > compile.sh ; sh compile.sh )
         echo set up in $destination $scalaIdeUrl $eclipseUrlArg
-        ~/src/s3cmd/s3cmd -P sync $destination/com.restphone.androidproguardscala.updatesite/target/repository/ s3://androidproguardscala/UpdateSiteForAndroidProguardScalaEcosystem/$dirname
+        ~/src/s3cmd/s3cmd -P sync $destination/com.restphone.androidproguardscala.updatesite/target/repository/ s3://androidproguardscala/UpdateSiteForAndroidProguardScalaEcosystem/$dirname/
     done
   done
 done
