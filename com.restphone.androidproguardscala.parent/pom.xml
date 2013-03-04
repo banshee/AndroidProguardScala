@@ -90,7 +90,6 @@
           <artifactId>tycho-packaging-plugin</artifactId>
           <version>${tycho.version}</version>
           <configuration>
-            <format>'${version.tag}-${version.suffix}-'yyyyMMddHHmm'-${buildNumber}'</format>
             <archiveSite>true</archiveSite>
           </configuration>
         </plugin>
