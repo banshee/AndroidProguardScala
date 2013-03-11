@@ -1,1 +1,0 @@
-jar tf /Users/james/eclipseIndigo/configuration/org.eclipse.osgi/bundles/945/1/.cp/lib/scala-library.jar | sed -e "s/\(.*\).class$/\1 com.restphonepack.\1/" | grep -v -e "\/$" | sed -e "s/\//\./g" | less > lib
