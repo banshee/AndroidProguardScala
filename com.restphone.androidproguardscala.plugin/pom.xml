@@ -51,7 +51,7 @@
         <executions>
           <execution>
             <id>default-cli</id>
-            <phase>compile</phase>
+            <phase>process-resources</phase>
             <goals>
               <goal>copy-dependencies</goal>
             </goals>
