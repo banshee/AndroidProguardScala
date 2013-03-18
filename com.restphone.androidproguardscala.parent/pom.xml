@@ -13,7 +13,7 @@
     <repo.eclipse>http://download.eclipse.org/releases/indigo/</repo.eclipse>
     <repo.scala-ide.root>http://download.scala-ide.org/ecosystem/</repo.scala-ide.root>
     <repo.scala-ide>${repo.scala-ide.root}/scala210/dev/base/</repo.scala-ide>
-    <scala.version>2.10.0</scala.version>
+    <scala.version>2.10.1</scala.version>
     <junit.version>4.10</junit.version>
     <version.suffix>2_09</version.suffix>
     <version.tag>local</version.tag>
@@ -176,7 +176,7 @@
       <dependency>
         <groupId>com.restphone</groupId>
         <artifactId>androidproguardscalalib_2.10</artifactId>
-        <version>0.4-SNAPSHOT</version>
+        <version>0.4</version>
       </dependency>
       <dependency>
         <groupId>org.ow2.asm</groupId>
