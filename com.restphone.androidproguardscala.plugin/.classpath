@@ -3,7 +3,7 @@
 	<classpathentry exported="true" kind="lib" path="lib/androidproguardscalalib_2.10-0.4-SNAPSHOT.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/asm-4.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/guava-13.0.1.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/jartender_2.10-0.4-SNAPSHOT.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/jartender_2.10-0.4-SNAPSHOT.jar" sourcepath="/Jartender"/>
 	<classpathentry exported="true" kind="lib" path="lib/javasignatureparser_2.10-0.4-SNAPSHOT.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/proguard-base-4.8.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/scalaz-core_2.10-7.0.0-M7.jar"/>

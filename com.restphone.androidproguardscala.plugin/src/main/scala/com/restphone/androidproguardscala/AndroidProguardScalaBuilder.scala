@@ -108,7 +108,6 @@ class AndroidProguardScalaBuilder extends IncrementalProjectBuilder {
         outputJarFile <- cacheSystem.installOutputJar( new File( outputPath ), new File( outputJar.toString ) )
       } yield {
         val bytesForCache = SerializableUtilities.convertToByteArray( cacheSystem )
-        val lnx = bytesForCache.length
         Files.write( bytesForCache, cacheFile )
         cacheEntry match {
           case _: BuiltLibrary =>
