@@ -127,6 +127,13 @@
       </releases>
     </repository>
     <repository>
+      <id>localReleases</id>
+      <url>http://localhost:8081/nexus/content/groups/public</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+    </repository>
+    <repository>
       <id>sonatype.release</id>
       <name>Sonatype maven release repository</name>
       <url>https://oss.sonatype.org/content/repositories/releases/</url>
