@@ -8,12 +8,12 @@
     <maven>3.0</maven>
   </prerequisites>
   <artifactId>com.restphone.androidproguardscala</artifactId>
-  <version>0.0.48-SNAPSHOT</version>
+  <version>0.0.48</version>
   <packaging>eclipse-plugin</packaging>
   <parent>
     <groupId>com.restphone</groupId>
     <artifactId>com.restphone.androidproguardscala.parent</artifactId>
-    <version>0.0.48-SNAPSHOT</version>
+    <version>0.0.48</version>
     <relativePath>..\com.restphone.androidproguardscala.parent</relativePath>
   </parent>
 
