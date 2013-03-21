@@ -11,7 +11,6 @@ for eclipse in e37 e38; do
   for scala in scala210; do
   # for scala in scala29 scala210; do
     for releaseType in dev stable; do
-        [ "$scala" = "scala210" -a "$releaseType" = "stable" ] && continue
         dirname=${releaseType}-${scala}-${eclipse}
         destination=$buildDir/$dirname
         mkdir -p $destination
