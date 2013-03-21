@@ -9,7 +9,7 @@
   </prerequisites>
   <artifactId>com.restphone.androidproguardscala</artifactId>
   <groupId>com.restphone</groupId>
-  <version>0.0.48-SNAPSHOT</version>
+  <version>0.0.48</version>
 
   <profiles>
     <profile>
