@@ -1,0 +1,27 @@
+# These files are text and should be normalized (convert crlf => lf)
+*.cs      text diff=csharp
+*.xaml    text
+*.csproj  text
+*.sln     text
+*.tt      text
+*.ps1     text
+*.cmd     text
+*.msbuild text
+*.md      text
+
+* .html text
+* .java text
+* .sbt text
+* .scala text
+* .sh text
+* .txt text
+* .xml text
+* .pom text
+
+# Images should be treated as binary
+# (binary is a macro for -text -diff)
+*.png     binary
+*.jepg    binary
+
+*.sdf     binary
+
