@@ -13,8 +13,8 @@
   <parent>
     <groupId>com.restphone</groupId>
     <artifactId>com.restphone.androidproguardscala.parent</artifactId>
-    <version>0.0.48</version>
-    <relativePath>..\com.restphone.androidproguardscala.parent</relativePath>
+    <version>0.0.49-SNAPSHOT</version>
+    <relativePath>../com.restphone.androidproguardscala.parent</relativePath>
   </parent>
 
   <profiles>
