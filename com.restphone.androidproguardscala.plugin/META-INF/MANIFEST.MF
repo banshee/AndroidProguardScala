@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Eclipse-BundleShape: dir
 Bundle-Name: AndroidProguardScala - a builder for speeding up builds of Scala for Android
 Bundle-SymbolicName: com.restphone.androidproguardscala;singleton:=true
-Bundle-Version: 0.0.48
+Bundle-Version: 0.0.49.qualifier
 Require-Bundle: org.eclipse.core.resources,
  org.eclipse.core.runtime,
  org.eclipse.ui,
@@ -17,7 +17,7 @@ Bundle-ClassPath: target/classes/,
  lib/asm-4.1.jar,
  lib/guava-13.0.1.jar,
  lib/jartender_2.10-0.5.jar,
- lib/javasignatureparser_2.10-0.5.jar,
+ lib/javasignatureparser_2.10-0.6.jar,
  lib/proguard-base-4.8.jar,
  lib/scalaz-core_2.10-7.0.0-M7.jar
 Bundle-ActivationPolicy: lazy
