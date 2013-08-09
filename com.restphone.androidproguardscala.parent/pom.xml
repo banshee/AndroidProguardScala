@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.restphone</groupId>
   <artifactId>com.restphone.androidproguardscala.parent</artifactId>
-  <version>0.0.48</version>
+  <version>0.0.49-SNAPSHOT</version>
   <packaging>pom</packaging>
   <properties>
     <encoding>UTF-8</encoding>
