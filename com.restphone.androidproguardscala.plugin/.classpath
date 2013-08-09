@@ -5,7 +5,8 @@
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry kind="src" path="src/main/java"/>
 	<classpathentry kind="src" path="src/main/scala"/>
-	<classpathentry kind="con" path="org.apache.ivyde.eclipse.cpcontainer.IVYDE_CONTAINER/?project=com.restphone.androidproguardscala.plugin&amp;ivyXmlPath=pom.xml&amp;confs=*"/>
-	<classpathentry kind="con" path="org.apache.ivyde.eclipse.cpcontainer.IVYDE_CONTAINER/?project=com.restphone.androidproguardscala.plugin&amp;ivyXmlPath=dependencies.xml&amp;confs=*"/>
+	<classpathentry kind="lib" path="lib/androidproguardscalalib_2.10-0.5.jar"/>
+	<classpathentry kind="lib" path="lib/jartender_2.10-0.6.jar"/>
+	<classpathentry kind="lib" path="lib/javasignatureparser_2.10-0.6.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

@@ -13,11 +13,11 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Export-Package: com.restphone.androidproguardscala
 Bundle-ClassPath: target/classes/,
  .,
- lib/androidproguardscalalib_2.10-0.4.jar,
+ lib/androidproguardscalalib_2.10-0.5.jar,
  lib/asm-4.1.jar,
- lib/guava-13.0.1.jar,
- lib/jartender_2.10-0.5.jar,
+ lib/guava-14.0.1.jar,
+ lib/jartender_2.10-0.6.jar,
  lib/javasignatureparser_2.10-0.6.jar,
- lib/proguard-base-4.8.jar,
- lib/scalaz-core_2.10-7.0.0-M7.jar
+ lib/proguard-base-4.10.jar,
+ lib/scalaz-core_2.10-7.0.2.jar
 Bundle-ActivationPolicy: lazy
