@@ -92,7 +92,16 @@ Eclipse error log.
 
 # Release Notes
 
-## v48 (in development - you'll need to build it yourself to see these changes)
+## v50
+
+* Update to latest version of dependencies (Scala 2.10.2, Scalaz 7.0.2)
+* Better checking for Proguard errors
+
+## v49
+
+Experimental attempt to join the Scala ecosystem
+
+## v48 (never released)
 
 * Fixed license files and xml
 * Build improvements for working in the Scala ecosystem
