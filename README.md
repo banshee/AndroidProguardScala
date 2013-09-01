@@ -12,9 +12,7 @@ NOTE:  Your project must have Scala nature or the plugin will fail to run.
 
 # USING THE PLUGIN
 
-1.  Install the Scala IDE from http://download.scala-ide.org/nightly-update-master-trunk.  
-There's a problem with M3 and Android (it won't always recompile
-Scala binaries), so you'll want a nightly.
+1.  Install the Scala IDE from http://scala-ide.org/download/current.html.
 
 1.  Point Eclipse to the update site at <code>https://androidproguardscala.s3.amazonaws.com/UpdateSiteForAndroidProguardScala</code> and install.
 Note that this isn't a link you can visit in a browser.
