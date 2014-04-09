@@ -74,6 +74,13 @@ libraries that your project uses, and -keep lines for all of your own code.
 * Can you run proguard from a command line using the proguard_processed.conf file?  That file is a normal proguard configuration
 and should work outside the plugin - there's nothing special or exotic about it.
 
+On Linux and OSX, you should be able to run by doing something like this:
+
+```
+cd /My/project/directory
+java -jar /Users/james/android-sdk-mac_86/tools.adt20/proguard/lib/proguard.jar @proguard_cache/proguard_processed.conf
+```
+
 # Reporting bugs
 
 If you've got a failing project, the very best thing for me is a tarball of the entire project,
