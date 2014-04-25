@@ -1,3 +1,7 @@
+# 2.11 not supported yet
+
+I'm working on it, but 2.11 support isn't available yet.  See https://github.com/banshee/AndroidProguardScala/issues/51
+
 # OVERVIEW
 
 AndroidProguardScala is an Eclipse plugin that speeds up the development process when you're using Scala on Android.
