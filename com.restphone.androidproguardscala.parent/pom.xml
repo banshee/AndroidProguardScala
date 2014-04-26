@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.restphone</groupId>
   <artifactId>com.restphone.androidproguardscala.parent</artifactId>
-  <version>0.0.50</version>
+  <version>0.0.51-SNAPSHOT</version>
   <packaging>pom</packaging>
   <properties>
     <encoding>UTF-8</encoding>
@@ -13,7 +13,7 @@
     <repo.eclipse>http://download.eclipse.org/releases/indigo/</repo.eclipse>
     <repo.scala-ide.root>http://download.scala-ide.org/ecosystem/</repo.scala-ide.root>
     <repo.scala-ide>${repo.scala-ide.root}/scala210/dev/base/</repo.scala-ide>
-    <scala.version>2.10.2</scala.version>
+    <scala.version>2.10.4</scala.version>
     <junit.version>4.10</junit.version>
     <version.suffix>2_09</version.suffix>
     <version.tag>local</version.tag>
@@ -173,7 +173,7 @@
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
-        <version>14.0.1</version>
+        <version>16.0.1</version>
       </dependency>
       <dependency>
         <groupId>junit</groupId>
@@ -183,7 +183,7 @@
       <dependency>
         <groupId>com.restphone</groupId>
         <artifactId>androidproguardscalalib_2.10</artifactId>
-        <version>0.5</version>
+        <version>0.6-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.ow2.asm</groupId>

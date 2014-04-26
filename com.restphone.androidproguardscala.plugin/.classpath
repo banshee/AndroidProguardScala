@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
+	<classpathentry exported="true" kind="lib" path="lib/androidproguardscalalib_2.10-0.6-SNAPSHOT.jar" sourcepath="/AndroidProguardScalaLib"/>
+	<classpathentry exported="true" kind="lib" path="lib/asm-4.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/guava-16.0.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/jartender_2.10-0.7-SNAPSHOT.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/javasignatureparser_2.10-0.7-SNAPSHOT.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/proguard-base-4.10.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/scalaz-core_2.10-7.0.6.jar"/>
 	<classpathentry kind="con" path="org.scala-ide.sdt.launching.SCALA_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry kind="src" path="src/main/java"/>
 	<classpathentry kind="src" path="src/main/scala"/>
-	<classpathentry kind="lib" path="lib/androidproguardscalalib_2.10-0.5.jar"/>
-	<classpathentry kind="lib" path="lib/jartender_2.10-0.6.jar"/>
-	<classpathentry kind="lib" path="lib/javasignatureparser_2.10-0.6.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
