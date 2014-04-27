@@ -24,4 +24,4 @@
 *.jepg    binary
 
 *.sdf     binary
-
+*.jar     binary
