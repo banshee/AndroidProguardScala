@@ -30,7 +30,7 @@
     </dependency>
     <dependency>
       <groupId>com.restphone</groupId>
-      <artifactId>androidproguardscalalib_2.10</artifactId>
+      <artifactId>androidproguardscalalib_2.11</artifactId>
     </dependency>
     <dependency>
       <groupId>org.ow2.asm</groupId>
@@ -56,7 +56,7 @@
             </goals>
             <configuration>
               <outputDirectory>./lib</outputDirectory>
-              <includeArtifactIds>androidproguardscalalib_2.10,asm,guava,jartender_2.10,javasignatureparser_2.10,proguard-base,scalaz-core_2.10,jsr305</includeArtifactIds>
+              <includeArtifactIds>androidproguardscalalib_2.11,scala-library_2.11,scala-xml_2.11,scala-parser-combinators_2.11,asm,guava,jartender_2.11,javasignatureparser_2.11,proguard-base,scalaz-core_2.11,jsr305</includeArtifactIds>
             </configuration>
           </execution>
         </executions>

@@ -7,17 +7,19 @@ Bundle-Version: 0.0.51.qualifier
 Require-Bundle: org.eclipse.core.resources,
  org.eclipse.core.runtime,
  org.eclipse.ui,
- org.eclipse.jdt.core;bundle-version="3.6.2",
- org.scala-ide.scala.library
+ org.eclipse.jdt.core;bundle-version="3.6.2"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Export-Package: com.restphone.androidproguardscala
 Bundle-ClassPath: target/classes/,
  .,
- lib/androidproguardscalalib_2.10-0.6-SNAPSHOT.jar,
+ lib/androidproguardscalalib_2.11-0.6-SNAPSHOT.jar,
  lib/asm-4.1.jar,
  lib/guava-16.0.1.jar,
- lib/jartender_2.10-0.7-SNAPSHOT.jar,
- lib/javasignatureparser_2.10-0.7-SNAPSHOT.jar,
+ lib/jartender_2.11-0.7-SNAPSHOT.jar,
+ lib/javasignatureparser_2.11-0.7-SNAPSHOT.jar,
  lib/proguard-base-4.10.jar,
- lib/scalaz-core_2.10-7.0.6.jar
+ lib/scalaz-core_2.11-7.0.6.jar,
+ lib/scala-xml_2.11-1.0.1.jar,
+ lib/scala-parser-combinators_2.11-1.0.1.jar,
+ lib/scala-library_2.11-1.0.0.jar
 Bundle-ActivationPolicy: lazy
