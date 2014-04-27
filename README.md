@@ -1,10 +1,3 @@
-# 2.11 alpha version available
-
-Download com.restphone.androidproguardscala.updatesite-0.0.51-SNAPSHOT.zip and use that as an update site in Eclipse:
-
-https://github.com/banshee/AndroidProguardScala/releases/tag/v51-alpha1
-
-
 # OVERVIEW
 
 AndroidProguardScala is an Eclipse plugin that speeds up the development process when you're using Scala on Android.
@@ -103,6 +96,10 @@ If you can't do that, a copy of the generated proguard config file is helpful, a
 Eclipse error log.
 
 # Release Notes
+
+## v51
+
+Support for Scala 2.11
 
 ## v50
 
