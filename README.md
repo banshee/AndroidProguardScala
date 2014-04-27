@@ -1,6 +1,9 @@
-# 2.11 not supported yet
+# 2.11 alpha version available
 
-I'm working on it, but 2.11 support isn't available yet.  See https://github.com/banshee/AndroidProguardScala/issues/51
+Download com.restphone.androidproguardscala.updatesite-0.0.51-SNAPSHOT.zip and use that as an update site in Eclipse:
+
+https://github.com/banshee/AndroidProguardScala/releases/tag/v51-alpha1
+
 
 # OVERVIEW
 
