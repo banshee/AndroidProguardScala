@@ -10,6 +10,12 @@ for release builds.
 
 NOTE:  Your project must have Scala nature or the plugin will fail to run.
 
+# Upgrading to Scala 2.11 
+
+Make sure you install version 51 or later of this plugin.
+
+Check the project properties for "AndroidProguardScala Properties" - make sure the new Scala libraries are checked if you're using them. 
+
 # USING THE PLUGIN
 
 1.  Install the Scala IDE from http://scala-ide.org/download/current.html.
