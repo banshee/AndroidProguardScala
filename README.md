@@ -1,3 +1,7 @@
+# Obsolete
+
+This is an Eclipse plugin for the obsolete Android Eclipse development system, and isn't relevant for modern Scala on Android.
+
 # OVERVIEW
 
 AndroidProguardScala is an Eclipse plugin that speeds up the development process when you're using Scala on Android.
