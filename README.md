@@ -1,4 +1,4 @@
-# Obsolete
+# OBSOLETE
 
 This is an Eclipse plugin for the obsolete Android Eclipse development system, and isn't relevant for modern Scala on Android.
 
