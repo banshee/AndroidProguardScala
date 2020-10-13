@@ -14,7 +14,7 @@
     <repo.scala-ide.root>http://download.scala-ide.org/ecosystem/</repo.scala-ide.root>
     <repo.scala-ide>${repo.scala-ide.root}/scala210/dev/base/</repo.scala-ide>
     <scala.version>2.11.0</scala.version>
-    <junit.version>4.10</junit.version>
+    <junit.version>4.13.1</junit.version>
     <version.suffix>2_09</version.suffix>
     <version.tag>local</version.tag>
   </properties>
